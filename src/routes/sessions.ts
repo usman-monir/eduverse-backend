@@ -5,6 +5,7 @@ import {
   createSession,
   bookSession,
   updateSessionStatus,
+  updateSession,
   deleteSession,
 } from '../controllers/sessionController';
 import {
@@ -22,6 +23,7 @@ router.get('/:id', getSessionById);
 // Protected routes
 router.post('/', authenticate, authorizeTutorOrAdmin, createSession);
 router.put('/:id/book', authenticate, authorizeStudent, bookSession);
+router.put('/:id', authenticate, authorizeTutorOrAdmin, updateSession);
 router.put(
   '/:id/status',
   authenticate,

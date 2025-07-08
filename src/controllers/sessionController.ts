@@ -223,7 +223,8 @@ export const updateSessionStatus = async (
     // Check if user can update this session
     if (
       req.user?.role === 'tutor' &&
-      session.tutor.toString() !== (req.user._id as mongoose.Types.ObjectId).toString()
+      session.tutor.toString() !==
+        (req.user._id as mongoose.Types.ObjectId).toString()
     ) {
       res.status(403).json({
         success: false,
@@ -257,6 +258,77 @@ export const updateSessionStatus = async (
   }
 };
 
+// @desc    Update session (Tutors & Admins only)
+// @route   PUT /api/sessions/:id
+// @access  Private (Tutor, Admin)
+export const updateSession = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const session = await ClassSession.findById(req.params.id);
+
+    if (!session) {
+      res.status(404).json({
+        success: false,
+        message: 'Session not found',
+      });
+      return;
+    }
+
+    // Check if user can update this session
+    if (
+      req.user?.role === 'tutor' &&
+      session.tutor.toString() !==
+        (req.user._id as mongoose.Types.ObjectId).toString()
+    ) {
+      res.status(403).json({
+        success: false,
+        message: 'You can only update your own sessions',
+      });
+      return;
+    }
+
+    // Update allowed fields
+    const allowedFields = [
+      'subject',
+      'date',
+      'time',
+      'duration',
+      'status',
+      'studentId',
+      'meetingLink',
+      'description',
+    ];
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        if (
+          field === 'studentId' &&
+          (!req.body[field] || req.body[field] === '')
+        ) {
+          (session as any)[field] = undefined;
+        } else {
+          (session as any)[field] = req.body[field];
+        }
+      }
+    });
+
+    await session.save();
+
+    res.json({
+      success: true,
+      data: session,
+      message: 'Session updated successfully',
+    });
+  } catch (error) {
+    console.error('Update session error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating session',
+    });
+  }
+};
+
 // @desc    Delete session (Tutors & Admins only)
 // @route   DELETE /api/sessions/:id
 // @access  Private (Tutor, Admin)
@@ -278,7 +350,8 @@ export const deleteSession = async (
     // Check if user can delete this session
     if (
       req.user?.role === 'tutor' &&
-      session.tutor.toString() !== (req.user._id as mongoose.Types.ObjectId).toString()
+      session.tutor.toString() !==
+        (req.user._id as mongoose.Types.ObjectId).toString()
     ) {
       res.status(403).json({
         success: false,

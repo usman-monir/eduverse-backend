@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { User, IUser } from '../models/User';
+import { Types } from 'mongoose';
 import { ClassSession, IClassSession } from '../models/ClassSession';
 import { StudyMaterial, IStudyMaterial } from '../models/StudyMaterial';
 import { SlotRequest, ISlotRequest } from '../models/SlotRequest';
@@ -183,7 +184,10 @@ export const updateUser = async (
     }
 
     // Prevent admin from changing their own role
-    if (user._id.toString() === req.user?._id.toString()) {
+    if (
+      (user._id as Types.ObjectId).toString() ===
+      (req.user?._id as Types.ObjectId).toString()
+    ) {
       res.status(400).json({
         success: false,
         message: 'You cannot modify your own role',
@@ -192,7 +196,8 @@ export const updateUser = async (
     }
 
     if (role) user.role = role;
-    if (typeof isActive === 'boolean') user.isActive = isActive;
+    if (typeof isActive === 'boolean')
+      user.status = isActive ? 'active' : 'inactive';
     if (subjects) user.subjects = subjects;
     if (experience) user.experience = experience;
 
@@ -231,7 +236,10 @@ export const deleteUser = async (
     }
 
     // Prevent admin from deleting themselves
-    if (user._id.toString() === req.user?._id.toString()) {
+    if (
+      (user._id as Types.ObjectId).toString() ===
+      (req.user?._id as Types.ObjectId).toString()
+    ) {
       res.status(400).json({
         success: false,
         message: 'You cannot delete your own account',
