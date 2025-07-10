@@ -5,6 +5,11 @@ import {
   sendBulkNotification,
   getWhatsAppStatus,
   configureWhatsApp,
+  getWhatsAppTemplates,
+  getWhatsAppTemplateById,
+  createWhatsAppTemplate,
+  updateWhatsAppTemplate,
+  deleteWhatsAppTemplate,
 } from '../controllers/whatsappController';
 import { authenticate, authorize } from '../middleware/auth';
 
@@ -12,6 +17,13 @@ const router = express.Router();
 
 // All routes require authentication
 router.use(authenticate);
+
+// WhatsApp Template CRUD (Admin only)
+router.get('/templates', authorize('admin'), getWhatsAppTemplates);
+router.get('/templates/:id', authorize('admin'), getWhatsAppTemplateById);
+router.post('/templates', authorize('admin'), createWhatsAppTemplate);
+router.put('/templates/:id', authorize('admin'), updateWhatsAppTemplate);
+router.delete('/templates/:id', authorize('admin'), deleteWhatsAppTemplate);
 
 // GET /api/whatsapp/status - Get WhatsApp integration status (Admin only)
 router.get('/status', authorize('admin'), getWhatsAppStatus);

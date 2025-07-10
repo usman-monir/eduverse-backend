@@ -105,7 +105,7 @@ export const createSession = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { subject, date, time, duration, description, meetingLink, price } =
+    const { subject, date, time, duration, status, description, meetingLink, price } =
       req.body;
 
     // Validate tutor exists
@@ -123,6 +123,7 @@ export const createSession = async (
       tutor: req.user?._id,
       tutorName: tutor.name,
       date: new Date(date),
+      status,
       time,
       duration,
       description,

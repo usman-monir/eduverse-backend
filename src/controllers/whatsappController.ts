@@ -3,6 +3,7 @@ import { User, IUser } from '../models/User';
 import { ClassSession, IClassSession } from '../models/ClassSession';
 import { SlotRequest, ISlotRequest } from '../models/SlotRequest';
 import mongoose from 'mongoose';
+import { WhatsAppTemplate } from '../models/WhatsAppTemplate';
 
 interface AuthRequest extends Request {
   user?: IUser;
@@ -327,5 +328,87 @@ export const configureWhatsApp = async (
       success: false,
       message: 'Server error while configuring WhatsApp',
     });
+  }
+};
+
+// Get all WhatsApp templates
+export const getWhatsAppTemplates = async (req: Request, res: Response) => {
+  try {
+    const templates = await WhatsAppTemplate.find().sort({ createdAt: -1 });
+    res.json({ success: true, data: templates });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: 'Failed to fetch templates' });
+  }
+};
+
+// Get a single WhatsApp template by ID
+export const getWhatsAppTemplateById = async (req: Request, res: Response) => {
+  try {
+    const template = await WhatsAppTemplate.findById(req.params.id);
+    if (!template) {
+      res.status(404).json({ success: false, message: 'Template not found' });
+      return;
+    }
+    res.json({ success: true, data: template });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: 'Failed to fetch template' });
+    return;
+  }
+};
+
+// Create a new WhatsApp template
+export const createWhatsAppTemplate = async (req: Request, res: Response) => {
+  try {
+    const { title, category, template } = req.body;
+    const newTemplate = new WhatsAppTemplate({ title, category, template });
+    await newTemplate.save();
+    res.status(201).json({ success: true, data: newTemplate });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: 'Failed to create template' });
+  }
+};
+
+// Update a WhatsApp template
+export const updateWhatsAppTemplate = async (req: Request, res: Response) => {
+  try {
+    const { title, category, template } = req.body;
+    const updated = await WhatsAppTemplate.findByIdAndUpdate(
+      req.params.id,
+      { title, category, template, updatedAt: Date.now() },
+      { new: true }
+    );
+    if (!updated) {
+      res.status(404).json({ success: false, message: 'Template not found' });
+      return;
+    }
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: 'Failed to update template' });
+    return;
+  }
+};
+
+// Delete a WhatsApp template
+export const deleteWhatsAppTemplate = async (req: Request, res: Response) => {
+  try {
+    const deleted = await WhatsAppTemplate.findByIdAndDelete(req.params.id);
+    if (!deleted) {
+      res.status(404).json({ success: false, message: 'Template not found' });
+      return;
+    }
+    res.json({ success: true, message: 'Template deleted' });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: 'Failed to delete template' });
+    return;
   }
 };
