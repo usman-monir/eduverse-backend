@@ -48,6 +48,9 @@ const fileFilter = (
     'image/jpeg',
     'image/jpg',
     'image/png',
+    'video/mp4',
+    'video/ogg',
+    'video/webm',
   ];
 
   if (allowedTypes.includes(file.mimetype)) {
@@ -55,7 +58,7 @@ const fileFilter = (
   } else {
     cb(
       new Error(
-        'Invalid file type. Only PDF, DOC, DOCX, PPT, PPTX, JPG, JPEG, PNG files are allowed.'
+        'Invalid file type. Only PDF, DOC, DOCX, PPT, PPTX, JPG, JPEG, PNG files, MP4, OGG, WEBM are allowed.'
       )
     );
   }

@@ -45,7 +45,7 @@ const studyMaterialSchema = new Schema<IStudyMaterial>(
     },
     fileType: {
       type: String,
-      enum: ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'jpg', 'jpeg', 'png'],
+      enum: ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'jpg', 'jpeg', 'png', 'mp4', 'ogg', 'webm'],
       required: [true, 'File type is required'],
     },
     fileSize: {
