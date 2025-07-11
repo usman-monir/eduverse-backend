@@ -30,6 +30,7 @@ export const getStudyMaterials = async (
     if (uploadedBy)
       filter.uploadedByName = { $regex: uploadedBy as string, $options: 'i' };
     if (accessLevel) filter.accessLevel = accessLevel;
+    if (req.query.collectionName) filter.collectionName = { $regex: req.query.collectionName as string, $options: 'i' };
 
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
 
@@ -124,7 +125,8 @@ export const uploadStudyMaterial = async (
     }
 
     const file = req.file;
-    const fileUrl = `/uploads/${file.filename}`;
+    // Always use /uploads/study-materials/ as the fileUrl prefix
+    const fileUrl = `/uploads/study-materials/${file.filename}`;
 
     const material = new StudyMaterial({
       title,
@@ -138,6 +140,7 @@ export const uploadStudyMaterial = async (
       subject,
       accessLevel,
       tags: Array.isArray(tags) ? tags : [tags],
+      collectionName: req.body.collectionName,
     });
 
     await material.save();
@@ -164,7 +167,7 @@ export const updateStudyMaterial = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { title, description, subject, accessLevel, tags } = req.body;
+    const { title, description, subject, accessLevel, tags, collectionName } = req.body;
 
     const material = await StudyMaterial.findById(req.params.id);
 
@@ -194,6 +197,7 @@ export const updateStudyMaterial = async (
     if (subject) material.subject = subject;
     if (accessLevel) material.accessLevel = accessLevel;
     if (tags) material.tags = Array.isArray(tags) ? tags : [tags];
+    if (collectionName) material.collectionName = collectionName;
 
     await material.save();
 
@@ -324,6 +328,28 @@ export const downloadStudyMaterial = async (
     res.status(500).json({
       success: false,
       message: 'Server error while processing download',
+    });
+  }
+};
+
+// @desc    Get all unique collection names
+// @route   GET /api/study-materials/collections
+// @access  Public
+export const getStudyMaterialCollections = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const collections = await StudyMaterial.distinct('collectionName');
+    res.json({
+      success: true,
+      data: collections,
+    });
+  } catch (error) {
+    console.error('Get study material collections error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching collections',
     });
   }
 };

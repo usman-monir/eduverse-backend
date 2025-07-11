@@ -6,6 +6,7 @@ import {
   updateStudyMaterial,
   deleteStudyMaterial,
   downloadStudyMaterial,
+  getStudyMaterialCollections,
 } from '../controllers/studyMaterialController';
 import { authenticate, authorizeTutorOrAdmin } from '../middleware/auth';
 import { upload, handleUploadError } from '../middleware/upload';
@@ -14,6 +15,7 @@ const router = express.Router();
 
 // Public routes
 router.get('/', getStudyMaterials);
+router.get('/collections', getStudyMaterialCollections);
 router.get('/:id', getStudyMaterialById);
 
 // Protected routes

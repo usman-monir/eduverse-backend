@@ -4,14 +4,23 @@ import fs from 'fs';
 
 // Create uploads directory if it doesn't exist
 const uploadDir = './uploads';
+const studyMaterialsDir = './uploads/study-materials';
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
+}
+if (!fs.existsSync(studyMaterialsDir)) {
+  fs.mkdirSync(studyMaterialsDir, { recursive: true });
 }
 
 // Configure storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    // Store study materials in a subfolder if the route matches
+    if (req.baseUrl && req.baseUrl.includes('study-material')) {
+      cb(null, studyMaterialsDir);
+    } else {
+      cb(null, uploadDir);
+    }
   },
   filename: (req, file, cb) => {
     // Generate unique filename with timestamp

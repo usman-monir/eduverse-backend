@@ -16,6 +16,7 @@ export interface IStudyMaterial extends Document {
   downloadCount: number;
   viewCount: number;
   tags: string[];
+  collectionName: string;
 }
 
 const studyMaterialSchema = new Schema<IStudyMaterial>(
@@ -96,6 +97,11 @@ const studyMaterialSchema = new Schema<IStudyMaterial>(
         trim: true,
       },
     ],
+    collectionName: {
+      type: String,
+      required: [true, 'Collection is required'],
+      trim: true,
+    },
   },
   {
     timestamps: true,
