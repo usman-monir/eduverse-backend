@@ -399,7 +399,7 @@ export const deleteSession = async (
 };
 
 // @desc    Get all available tutors for session creation
-// @route   GET /api/sessions/tutors
+// @route   GET /api/sessions/tutors/available
 // @access  Private (Admin only)
 export const getAvailableTutors = async (
   req: AuthRequest,
@@ -423,9 +423,15 @@ export const getAvailableTutors = async (
       'name email role subjects experience'
     ).sort({ name: 1 });
 
+    // Map the subjects array to subject names for consistency
+    const tutorsWithSubjectNames = tutors.map(tutor => ({
+      ...tutor.toObject(),
+      subjects: tutor.subjects || [] // subjects are already stored as names in User model
+    }));
+
     res.json({
       success: true,
-      data: tutors,
+      data: tutorsWithSubjectNames,
     });
   } catch (error) {
     console.error('Get available tutors error:', error);
