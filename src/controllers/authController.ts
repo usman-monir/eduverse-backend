@@ -33,6 +33,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       phone,
       subjects,
       experience,
+      status: 'pending',
     });
 
     await user.save();
@@ -86,9 +87,15 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     // Check if user is active
     if (user.status !== 'active') {
+      let message = 'Account is deactivated';
+      if (user.status === 'pending') {
+        message = 'Account is pending approval by admin';
+      } else if (user.status === 'inactive') {
+        message = 'Account is deactivated';
+      }
       res.status(401).json({
         success: false,
-        message: 'Account is deactivated',
+        message,
       });
       return;
     }

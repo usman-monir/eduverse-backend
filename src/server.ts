@@ -6,11 +6,13 @@ import { connectDB } from './config/database';
 
 // Import routes
 import authRoutes from './routes/auth';
+import adminRoutes from './routes/admin';
 import sessionRoutes from './routes/sessions';
 import studyMaterialRoutes from './routes/studyMaterials';
 import slotRequestRoutes from './routes/slotRequests';
-import adminRoutes from './routes/admin';
 import whatsappRoutes from './routes/whatsapp';
+import emailRoutes from './routes/email';
+import subjectRoutes from './routes/subjects';
 
 // Load environment variables
 dotenv.config();
@@ -50,11 +52,13 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/study-materials', studyMaterialRoutes);
 app.use('/api/slot-requests', slotRequestRoutes);
-app.use('/api/admin', adminRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/email', emailRoutes);
+app.use('/api/subjects', subjectRoutes);
 
 // Global error handler
 app.use(

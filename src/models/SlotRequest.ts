@@ -9,7 +9,9 @@ export interface ISlotRequest extends Document {
   duration: string;
   description: string;
   status: 'pending' | 'approved' | 'rejected' | 'completed';
-  assignedTutor?: mongoose.Types.ObjectId;
+  requestedTutor?: mongoose.Types.ObjectId; // The tutor the student requested
+  requestedTutorName?: string; // Name of the requested tutor
+  assignedTutor?: mongoose.Types.ObjectId; // The tutor assigned by admin (can be different from requested)
   assignedTutorName?: string;
   approvedAt?: Date;
   rejectedAt?: Date;
@@ -59,6 +61,14 @@ const slotRequestSchema = new Schema<ISlotRequest>(
       type: String,
       enum: ['pending', 'approved', 'rejected', 'completed'],
       default: 'pending',
+    },
+    requestedTutor: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    requestedTutorName: {
+      type: String,
+      trim: true,
     },
     assignedTutor: {
       type: Schema.Types.ObjectId,

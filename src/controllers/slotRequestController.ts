@@ -44,6 +44,7 @@ export const getSlotRequests = async (
     const requests = await SlotRequest.find(filter)
       .populate('studentId', 'name email phone')
       .populate('assignedTutor', 'name email phone subjects')
+      .populate('requestedTutor', 'name email phone subjects')
       .sort({ requestedAt: -1 })
       .skip(skip)
       .limit(parseInt(limit as string));
@@ -79,7 +80,8 @@ export const getSlotRequestById = async (
   try {
     const request = await SlotRequest.findById(req.params.id)
       .populate('studentId', 'name email phone')
-      .populate('assignedTutor', 'name email phone subjects experience');
+      .populate('assignedTutor', 'name email phone subjects experience')
+      .populate('requestedTutor', 'name email phone subjects experience');
 
     if (!request) {
       res.status(404).json({
@@ -135,7 +137,7 @@ export const createSlotRequest = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { subject, preferredDate, preferredTime, duration, description } =
+    const { subject, preferredDate, preferredTime, duration, description, tutor } =
       req.body;
 
     if (req.user?.role !== 'student') {
@@ -146,6 +148,18 @@ export const createSlotRequest = async (
       return;
     }
 
+    // Find the requested tutor
+    let requestedTutor = null;
+    let requestedTutorName = '';
+    
+    if (tutor) {
+      const tutorUser = await User.findOne({ email: tutor, role: 'tutor' });
+      if (tutorUser) {
+        requestedTutor = tutorUser._id;
+        requestedTutorName = tutorUser.name;
+      }
+    }
+
     const request = new SlotRequest({
       studentId: req.user._id,
       studentName: req.user.name,
@@ -154,6 +168,8 @@ export const createSlotRequest = async (
       preferredTime,
       duration,
       description,
+      requestedTutor,
+      requestedTutorName,
     });
 
     await request.save();

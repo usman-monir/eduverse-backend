@@ -11,7 +11,7 @@ export interface IUser extends Document {
   enrolledSessions?: number;
   completedSessions?: number;
   joinedDate: Date;
-  status: 'active' | 'inactive';
+  status: 'pending' | 'active' | 'inactive';
   subjects?: string[]; // For tutors
   experience?: string; // For tutors
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -64,8 +64,8 @@ const userSchema = new Schema<IUser>(
     },
     status: {
       type: String,
-      enum: ['active', 'inactive'],
-      default: 'active',
+      enum: ['pending', 'active', 'inactive'],
+      default: 'pending',
     },
     subjects: [
       {

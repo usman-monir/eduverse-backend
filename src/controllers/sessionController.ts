@@ -105,12 +105,12 @@ export const createSession = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { subject, date, time, duration, status, description, meetingLink, price } =
+    const { subject, date, time, duration, status, description, meetingLink, price, tutorId } =
       req.body;
 
-    // Validate tutor exists
-    const tutor = await User.findById(req.user?._id);
-    if (!tutor || (tutor.role !== 'tutor' && tutor.role !== 'admin')) {
+    // Validate user can create sessions
+    const user = await User.findById(req.user?._id);
+    if (!user || (user.role !== 'tutor' && user.role !== 'admin')) {
       res.status(403).json({
         success: false,
         message: 'Only tutors and admins can create sessions',
@@ -118,10 +118,32 @@ export const createSession = async (
       return;
     }
 
+    // Determine which tutor to assign
+    let sessionTutor;
+    let sessionTutorName;
+
+    if (user.role === 'admin' && tutorId) {
+      // Admin can assign any tutor
+      const selectedTutor = await User.findById(tutorId);
+      if (!selectedTutor || (selectedTutor.role !== 'tutor' && selectedTutor.role !== 'admin')) {
+        res.status(400).json({
+          success: false,
+          message: 'Invalid tutor selected',
+        });
+        return;
+      }
+      sessionTutor = selectedTutor._id;
+      sessionTutorName = selectedTutor.name;
+    } else {
+      // Tutors can only create sessions for themselves
+      sessionTutor = req.user?._id;
+      sessionTutorName = user.name;
+    }
+
     const session = new ClassSession({
       subject,
-      tutor: req.user?._id,
-      tutorName: tutor.name,
+      tutor: sessionTutor,
+      tutorName: sessionTutorName,
       date: new Date(date),
       status,
       time,
@@ -372,6 +394,44 @@ export const deleteSession = async (
     res.status(500).json({
       success: false,
       message: 'Server error while deleting session',
+    });
+  }
+};
+
+// @desc    Get all available tutors for session creation
+// @route   GET /api/sessions/tutors
+// @access  Private (Admin only)
+export const getAvailableTutors = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    // Only admins can get the list of tutors
+    if (req.user?.role !== 'admin') {
+      res.status(403).json({
+        success: false,
+        message: 'Only admins can access this endpoint',
+      });
+      return;
+    }
+
+    const tutors = await User.find(
+      { 
+        role: { $in: ['tutor', 'admin'] },
+        status: 'active'
+      },
+      'name email role subjects experience'
+    ).sort({ name: 1 });
+
+    res.json({
+      success: true,
+      data: tutors,
+    });
+  } catch (error) {
+    console.error('Get available tutors error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching tutors',
     });
   }
 };

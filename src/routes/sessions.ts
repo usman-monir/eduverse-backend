@@ -4,15 +4,12 @@ import {
   getSessionById,
   createSession,
   bookSession,
-  updateSessionStatus,
   updateSession,
+  updateSessionStatus,
   deleteSession,
+  getAvailableTutors,
 } from '../controllers/sessionController';
-import {
-  authenticate,
-  authorizeStudent,
-  authorizeTutorOrAdmin,
-} from '../middleware/auth';
+import { authenticate, authorizeTutorOrAdmin } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -22,14 +19,12 @@ router.get('/:id', getSessionById);
 
 // Protected routes
 router.post('/', authenticate, authorizeTutorOrAdmin, createSession);
-router.put('/:id/book', authenticate, authorizeStudent, bookSession);
+router.put('/:id/book', authenticate, bookSession);
 router.put('/:id', authenticate, authorizeTutorOrAdmin, updateSession);
-router.put(
-  '/:id/status',
-  authenticate,
-  authorizeTutorOrAdmin,
-  updateSessionStatus
-);
+router.put('/:id/status', authenticate, authorizeTutorOrAdmin, updateSessionStatus);
 router.delete('/:id', authenticate, authorizeTutorOrAdmin, deleteSession);
+
+// Admin-only routes
+router.get('/tutors/available', authenticate, getAvailableTutors);
 
 export default router;

@@ -4,6 +4,7 @@ import { Types } from 'mongoose';
 import { ClassSession, IClassSession } from '../models/ClassSession';
 import { StudyMaterial, IStudyMaterial } from '../models/StudyMaterial';
 import { SlotRequest, ISlotRequest } from '../models/SlotRequest';
+import EmailService from  '../services/emailService';
 
 interface AuthRequest extends Request {
   user?: IUser;
@@ -282,6 +283,63 @@ export const deleteUser = async (
   }
 };
 
+// @desc    Approve pending user
+// @route   PUT /api/admin/users/:id/approve
+// @access  Private (Admin only)
+export const approveUser = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findById(id);
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+      return;
+    }
+
+    if (user.status !== 'pending') {
+      res.status(400).json({
+        success: false,
+        message: 'User is not pending approval',
+      });
+      return;
+    }
+
+    // Update user status to active
+    user.status = 'active';
+    await user.save();
+
+    // Send approval email
+    try {
+      await EmailService.sendApprovalEmail({
+        email: user.email,
+        name: user.name,
+        loginUrl: `${process.env.CORS_ORIGIN || 'http://localhost:3000'}/login`,
+      });
+    } catch (emailError) {
+      console.error('Failed to send approval email:', emailError);
+      // Continue with approval even if email fails
+    }
+
+    res.json({
+      success: true,
+      data: user,
+      message: 'User approved successfully',
+    });
+  } catch (error) {
+    console.error('Approve user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while approving user',
+    });
+  }
+};
+
 // @desc    Get all sessions with filters
 // @route   GET /api/admin/sessions
 // @access  Private (Admin)
@@ -376,6 +434,28 @@ export const getAdminMaterials = async (
     res.status(500).json({
       success: false,
       message: 'Server error while fetching materials',
+    });
+  }
+};
+
+// @desc    Get all tutors with their subjects
+// @route   GET /api/tutors
+// @access  Public
+export const getAllTutorsWithSubjects = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const tutors = await User.find({ role: 'tutor' }, 'name email subjects');
+    res.json({
+      success: true,
+      data: tutors,
+    });
+  } catch (error) {
+    console.error('Get tutors error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching tutors',
     });
   }
 };
