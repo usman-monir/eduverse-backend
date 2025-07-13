@@ -30,8 +30,8 @@ router.get('/status', authorize('admin'), getWhatsAppStatus);
 // POST /api/whatsapp/configure - Configure WhatsApp settings (Admin only)
 router.post('/configure', authorize('admin'), configureWhatsApp);
 
-// POST /api/whatsapp/send-reminder - Send session reminder (Admin, Tutor)
-router.post('/send-reminder', authorize('admin', 'tutor'), sendSessionReminder);
+// POST /api/whatsapp/send-reminder/:sessionId - Send session reminder (Admin, Tutor)
+router.post('/send-reminder/:sessionId', authorize('admin', 'tutor'), sendSessionReminder);
 
 // POST /api/whatsapp/send-bulk - Send bulk notification (Admin only)
 router.post('/send-bulk', authorize('admin'), sendBulkNotification);

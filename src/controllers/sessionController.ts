@@ -34,14 +34,14 @@ export const getSessions = async (
     if (subject) filter.subject = { $regex: subject as string, $options: 'i' };
     if (tutor) filter.tutorName = { $regex: tutor as string, $options: 'i' };
     if (date) filter.date = new Date(date as string);
-    if (studentId) filter.studentId = studentId;
+    if (studentId) filter['enrolledStudents.studentId'] = studentId;
     if (type) filter.type = type;
 
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
 
     const sessions = await ClassSession.find(filter)
       .populate('tutor', 'name email')
-      .populate('studentId', 'name email')
+      .populate('enrolledStudents.studentId', 'name email')
       .sort({ date: 1, time: 1 })
       .skip(skip)
       .limit(parseInt(limit as string));
@@ -90,9 +90,9 @@ export const getMySessions = async (
 
     // Role-based filtering
     if (req.user?.role === 'student') {
-      // Students see their booked sessions and their slot requests
+      // Students see their enrolled sessions and their slot requests
       filter.$or = [
-        { studentId: userId },
+        { 'enrolledStudents.studentId': userId },
         { createdBy: userId, type: 'slot_request' }
       ];
     } else if (req.user?.role === 'tutor') {
@@ -114,7 +114,7 @@ export const getMySessions = async (
 
     const sessions = await ClassSession.find(filter)
       .populate('tutor', 'name email')
-      .populate('studentId', 'name email')
+      .populate('enrolledStudents.studentId', 'name email')
       .populate('createdBy', 'name email')
       .sort({ date: 1, time: 1 })
       .skip(skip)
@@ -151,7 +151,7 @@ export const getSessionById = async (
   try {
     const session = await ClassSession.findById(req.params.id)
       .populate('tutor', 'name email phone subjects experience')
-      .populate('studentId', 'name email phone');
+      .populate('enrolledStudents.studentId', 'name email phone');
 
     if (!session) {
       res.status(404).json({
@@ -182,7 +182,7 @@ export const createSession = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { subject, date, time, duration, status, description, meetingLink, price, tutorId } =
+    const { subject, date, time, duration, status, description, meetingLink, price, tutorId, maxStudents } =
       req.body;
 
     // Validate user can create sessions
@@ -231,6 +231,7 @@ export const createSession = async (
       description,
       meetingLink,
       price,
+      maxStudents: maxStudents || 10,
       type: sessionType,
       createdBy: req.user?._id as mongoose.Types.ObjectId,
     });
@@ -373,10 +374,39 @@ export const bookSession = async (
       return;
     }
 
-    // Update session
-    session.status = 'booked';
-    session.studentId = req.user?._id as mongoose.Types.ObjectId;
-    session.studentName = req.user?.name;
+    // Check if session is full
+    if (session.isFull) {
+      res.status(400).json({
+        success: false,
+        message: 'Session is full and cannot accept more students',
+      });
+      return;
+    }
+
+    // Check if student is already enrolled
+    const isAlreadyEnrolled = session.enrolledStudents.some(
+      (enrollment) => enrollment.studentId.toString() === req.user?._id?.toString()
+    );
+
+    if (isAlreadyEnrolled) {
+      res.status(400).json({
+        success: false,
+        message: 'You are already enrolled in this session',
+      });
+      return;
+    }
+
+    // Add student to enrolled students
+    session.enrolledStudents.push({
+      studentId: req.user?._id as mongoose.Types.ObjectId,
+      studentName: req.user?.name || '',
+      enrolledAt: new Date(),
+    });
+
+    // Update session status to booked if it has students
+    if (session.enrolledStudents.length > 0) {
+      session.status = 'booked';
+    }
 
     await session.save();
 
@@ -581,10 +611,12 @@ export const updateSessionStatus = async (
     session.status = status;
 
     // Update user stats if session is completed
-    if (status === 'completed' && session.studentId) {
-      await User.findByIdAndUpdate(session.studentId, {
-        $inc: { completedSessions: 1, enrolledSessions: -1 },
-      });
+    if (status === 'completed' && session.enrolledStudents.length > 0) {
+      const studentIds = session.enrolledStudents.map(enrollment => enrollment.studentId);
+      await User.updateMany(
+        { _id: { $in: studentIds } },
+        { $inc: { completedSessions: 1, enrolledSessions: -1 } }
+      );
     }
 
     await session.save();
@@ -637,27 +669,20 @@ export const updateSession = async (
       }
     }
 
-    // Update allowed fields
+    // Update allowed fields (removed studentId since we now use enrolledStudents array)
     const allowedFields = [
       'subject',
       'date',
       'time',
       'duration',
       'status',
-      'studentId',
       'meetingLink',
       'description',
+      'maxStudents',
     ];
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) {
-        if (
-          field === 'studentId' &&
-          (!req.body[field] || req.body[field] === '')
-        ) {
-          (session as any)[field] = undefined;
-        } else {
-          (session as any)[field] = req.body[field];
-        }
+        (session as any)[field] = req.body[field];
       }
     });
 

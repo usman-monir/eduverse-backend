@@ -40,8 +40,8 @@ export const getSystemStats = async (
     const recentSessions = await ClassSession.find()
       .sort({ createdAt: -1 })
       .limit(5)
-      .populate('tutorId', 'name')
-      .populate('studentId', 'name');
+      .populate('tutor', 'name')
+      .populate('enrolledStudents.studentId', 'name');
 
     const recentSlotRequests = await ClassSession.find({ type: 'slot_request' })
       .sort({ createdAt: -1 })
@@ -249,7 +249,10 @@ export const deleteUser = async (
     // Check if user has associated data
     const [sessions, materials, slotRequests] = await Promise.all([
       ClassSession.countDocuments({
-        $or: [{ tutor: user._id }, { studentId: user._id }],
+        $or: [
+          { tutor: user._id }, 
+          { 'enrolledStudents.studentId': user._id }
+        ],
       }),
       StudyMaterial.countDocuments({ uploadedBy: user._id }),
       ClassSession.countDocuments({
@@ -442,14 +445,14 @@ export const getAdminSessions = async (
 
     if (status) filter.status = status;
     if (subject) filter.subject = { $regex: subject as string, $options: 'i' };
-    if (tutorId) filter.tutorId = tutorId;
-    if (studentId) filter.studentId = studentId;
+    if (tutorId) filter.tutor = tutorId;
+    if (studentId) filter['enrolledStudents.studentId'] = studentId;
 
     const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
 
     const sessions = await ClassSession.find(filter)
-      .populate('tutorId', 'name email')
-      .populate('studentId', 'name email')
+      .populate('tutor', 'name email')
+      .populate('enrolledStudents.studentId', 'name email')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit as string));

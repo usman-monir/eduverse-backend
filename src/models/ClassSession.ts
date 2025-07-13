@@ -8,8 +8,12 @@ export interface IClassSession extends Document {
   time: string;
   duration: string;
   status: 'available' | 'booked' | 'completed' | 'cancelled' | 'pending' | 'approved';
-  studentId?: mongoose.Types.ObjectId;
-  studentName?: string;
+  enrolledStudents: Array<{
+    studentId: mongoose.Types.ObjectId;
+    studentName: string;
+    enrolledAt: Date;
+  }>;
+  maxStudents: number;
   meetingLink?: string;
   description?: string;
   price?: number;
@@ -17,6 +21,10 @@ export interface IClassSession extends Document {
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+  // Virtual properties
+  isFull: boolean;
+  availableSpots: number;
+  enrollmentCount: number;
 }
 
 const classSessionSchema = new Schema<IClassSession>(
@@ -55,13 +63,28 @@ const classSessionSchema = new Schema<IClassSession>(
       enum: ['available', 'booked', 'completed', 'cancelled', 'pending', 'approved'],
       default: 'available',
     },
-    studentId: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-    },
-    studentName: {
-      type: String,
-      trim: true,
+    enrolledStudents: [
+      {
+        studentId: {
+          type: Schema.Types.ObjectId,
+          ref: 'User',
+          required: true,
+        },
+        studentName: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        enrolledAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    maxStudents: {
+      type: Number,
+      default: 10,
+      min: [1, 'Max students must be at least 1'],
     },
     meetingLink: {
       type: String,
@@ -95,11 +118,27 @@ const classSessionSchema = new Schema<IClassSession>(
 
 // Index for efficient queries
 classSessionSchema.index({ tutor: 1, date: 1, status: 1 });
-classSessionSchema.index({ studentId: 1, status: 1 });
+classSessionSchema.index({ 'enrolledStudents.studentId': 1, status: 1 });
 classSessionSchema.index({ date: 1, status: 1 });
-classSessionSchema.index({ type: 1, status: 1 });
 classSessionSchema.index({ createdBy: 1, status: 1 });
-classSessionSchema.index({ type: 1, createdBy: 1 });
+
+// Virtual for checking if session is full
+classSessionSchema.virtual('isFull').get(function() {
+  return this.enrolledStudents.length >= this.maxStudents;
+});
+
+// Virtual for available spots
+classSessionSchema.virtual('availableSpots').get(function() {
+  return Math.max(0, this.maxStudents - this.enrolledStudents.length);
+});
+
+// Virtual for enrollment count
+classSessionSchema.virtual('enrollmentCount').get(function() {
+  return this.enrolledStudents.length;
+});
+
+// Ensure virtuals are included in JSON output
+classSessionSchema.set('toJSON', { virtuals: true });
 
 export const ClassSession = mongoose.model<IClassSession>(
   'ClassSession',

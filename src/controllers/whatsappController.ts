@@ -8,19 +8,18 @@ interface AuthRequest extends Request {
   user?: IUser;
 }
 
-// @desc    Send session reminder
-// @route   POST /api/whatsapp/send-reminder
-// @access  Private (Admin, Tutor)
+// @desc    Send session reminder via WhatsApp
+// @route   POST /api/whatsapp/send-reminder/:sessionId
+// @access  Private (Tutor, Admin)
 export const sendSessionReminder = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const { sessionId, message } = req.body;
+    const { sessionId } = req.params;
+    const { message } = req.body;
 
-    const session = await ClassSession.findById(sessionId)
-      .populate('studentId', 'name phone')
-      .populate('tutor', 'name');
+    const session = await ClassSession.findById(sessionId).populate('tutor');
 
     if (!session) {
       res.status(404).json({
@@ -30,58 +29,78 @@ export const sendSessionReminder = async (
       return;
     }
 
-    // Check if user can send reminder for this session
-    if (
-      req.user?.role === 'tutor' &&
-      session.tutor.toString() !==
-        (req.user._id as mongoose.Types.ObjectId).toString()
-    ) {
-      res.status(403).json({
-        success: false,
-        message: 'You can only send reminders for your own sessions',
-      });
-      return;
+    // Check if user can send reminders for this session
+    if (req.user?.role === 'tutor') {
+      const userId = req.user?._id?.toString?.() || req.user?._id;
+      const tutorId = session.tutor?.toString?.() || session.tutor;
+      if (userId !== tutorId) {
+        res.status(403).json({
+          success: false,
+          message: 'You can only send reminders for your own sessions',
+        });
+        return;
+      }
     }
 
-    const student = session.studentId as any;
-    const tutor = session.tutor as any;
-
-    if (!student?.phone) {
+    // Get all enrolled students
+    const enrolledStudents = session.enrolledStudents;
+    
+    if (enrolledStudents.length === 0) {
       res.status(400).json({
         success: false,
-        message: 'Student phone number not available',
+        message: 'No students enrolled in this session',
       });
       return;
     }
 
-    // Default reminder message
-    const defaultMessage = `Hi ${student.name}! This is a reminder for your ${
-      session.subject
-    } session with ${tutor.name} on ${new Date(
-      session.date
-    ).toLocaleDateString()} at ${session.time}. Please be ready!`;
+    const tutor = session.tutor as any;
+    const results = [];
 
-    const finalMessage = message || defaultMessage;
+    // Send reminders to all enrolled students
+    for (const enrollment of enrolledStudents) {
+      const student = await User.findById(enrollment.studentId);
+      
+      if (!student?.phone) {
+        console.log(`Student ${student?.name || enrollment.studentName} has no phone number`);
+        continue;
+      }
 
-    // TODO: Integrate with actual WhatsApp API (Twilio, WhatsApp Business API, etc.)
-    // For now, we'll simulate the WhatsApp sending
-    console.log('WhatsApp Message:', {
-      to: student.phone,
-      message: finalMessage,
-      sessionId: session._id,
-    });
+      // Default reminder message
+      const defaultMessage = `Hi ${student.name}! This is a reminder for your ${
+        session.subject
+      } session with ${tutor.name} on ${new Date(
+        session.date
+      ).toLocaleDateString()} at ${session.time}. Please be ready!`;
 
-    // Note: reminderSent and reminderSentAt fields don't exist in the current model
-    // TODO: Add these fields to the ClassSession model if needed
-    console.log('Session reminder sent for session:', session._id);
+      const finalMessage = message || defaultMessage;
+
+      // TODO: Integrate with actual WhatsApp API (Twilio, WhatsApp Business API, etc.)
+      // For now, we'll simulate the WhatsApp sending
+      console.log('WhatsApp Message:', {
+        to: student.phone,
+        message: finalMessage,
+        sessionId: session._id,
+        studentId: student._id,
+      });
+
+      results.push({
+        studentId: student._id,
+        studentName: student.name,
+        phone: student.phone,
+        message: finalMessage,
+        status: 'sent',
+      });
+    }
+
+    console.log('Session reminders sent for session:', session._id);
 
     res.json({
       success: true,
-      message: 'Session reminder sent successfully',
+      message: `Session reminders sent to ${results.length} students`,
       data: {
         sessionId: session._id,
-        studentPhone: student.phone,
-        message: finalMessage,
+        totalSent: results.length,
+        results,
       },
     });
   } catch (error) {

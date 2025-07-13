@@ -172,9 +172,11 @@ export const updateProfile = async (
     if (phone !== undefined) user.phone = phone;
     if (avatar !== undefined) user.avatar = avatar;
     
+    // Allow both students and tutors to update subjects
+    if (subjects !== undefined) user.subjects = subjects;
+    
     // Role-specific fields
     if (user.role === 'tutor') {
-      if (subjects !== undefined) user.subjects = subjects;
       if (experience !== undefined) user.experience = experience;
     }
 
