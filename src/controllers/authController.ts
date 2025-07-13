@@ -156,7 +156,7 @@ export const updateProfile = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { name, phone, subjects, experience } = req.body;
+    const { name, phone, subjects, experience, avatar } = req.body;
 
     const user = await User.findById(req.user?._id);
     if (!user) {
@@ -169,9 +169,14 @@ export const updateProfile = async (
 
     // Update fields
     if (name) user.name = name;
-    if (phone) user.phone = phone;
-    if (subjects) user.subjects = subjects;
-    if (experience) user.experience = experience;
+    if (phone !== undefined) user.phone = phone;
+    if (avatar !== undefined) user.avatar = avatar;
+    
+    // Role-specific fields
+    if (user.role === 'tutor') {
+      if (subjects !== undefined) user.subjects = subjects;
+      if (experience !== undefined) user.experience = experience;
+    }
 
     await user.save();
 
@@ -185,6 +190,68 @@ export const updateProfile = async (
     res.status(500).json({
       success: false,
       message: 'Server error while updating profile',
+    });
+  }
+};
+
+// @desc    Change user password
+// @route   PUT /api/auth/change-password
+// @access  Private
+export const changePassword = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({
+        success: false,
+        message: 'Current password and new password are required',
+      });
+      return;
+    }
+
+    if (newPassword.length < 4) {
+      res.status(400).json({
+        success: false,
+        message: 'New password must be at least 4 characters long',
+      });
+      return;
+    }
+
+    const user = await User.findById(req.user?._id);
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+      return;
+    }
+
+    // Verify current password
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      res.status(400).json({
+        success: false,
+        message: 'Current password is incorrect',
+      });
+      return;
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully',
+    });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while changing password',
     });
   }
 };
