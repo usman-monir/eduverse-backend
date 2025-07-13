@@ -4,7 +4,7 @@ import {
   publicTestEmail,
   sendWelcomeEmail,
   sendSessionReminder,
-  sendSlotRequestNotification,
+  sendSessionRequestNotification,
   sendAdminApprovalEmail,
 } from '../controllers/emailController';
 import { authenticate, authorize } from '../middleware/auth';
@@ -23,8 +23,8 @@ router.post('/welcome', authenticate, authorize('admin'), sendWelcomeEmail);
 // Send session reminder (Admin, Tutor)
 router.post('/session-reminder', authenticate, authorize('admin', 'tutor'), sendSessionReminder);
 
-// Send slot request notification (Admin only)
-router.post('/slot-request-notification', authenticate, authorize('admin'), sendSlotRequestNotification);
+// Send session request notification (Admin only)
+router.post('/session-request-notification', authenticate, authorize('admin'), sendSessionRequestNotification);
 
 // Send admin approval notification (Admin only)
 router.post('/admin-approval', authenticate, authorize('admin'), sendAdminApprovalEmail);

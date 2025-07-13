@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { User, IUser } from '../models/User';
 import { ClassSession, IClassSession } from '../models/ClassSession';
-import { SlotRequest, ISlotRequest } from '../models/SlotRequest';
 import mongoose from 'mongoose';
 import { WhatsAppTemplate } from '../models/WhatsAppTemplate';
 
@@ -90,84 +89,6 @@ export const sendSessionReminder = async (
     res.status(500).json({
       success: false,
       message: 'Server error while sending session reminder',
-    });
-  }
-};
-
-// @desc    Send slot request notification
-// @route   POST /api/whatsapp/send-request-notification
-// @access  Private (Admin)
-export const sendRequestNotification = async (
-  req: AuthRequest,
-  res: Response
-): Promise<void> => {
-  try {
-    const { requestId, tutorId, message } = req.body;
-
-    const [request, tutor] = await Promise.all([
-      SlotRequest.findById(requestId).populate('studentId', 'name phone'),
-      User.findById(tutorId),
-    ]);
-
-    if (!request) {
-      res.status(404).json({
-        success: false,
-        message: 'Slot request not found',
-      });
-      return;
-    }
-
-    if (!tutor || tutor.role !== 'tutor') {
-      res.status(404).json({
-        success: false,
-        message: 'Tutor not found',
-      });
-      return;
-    }
-
-    if (!tutor.phone) {
-      res.status(400).json({
-        success: false,
-        message: 'Tutor phone number not available',
-      });
-      return;
-    }
-
-    const student = request.studentId as any;
-
-    // Default notification message
-    const defaultMessage = `Hi ${
-      tutor.name
-    }! You have a new tutoring request from ${student.name} for ${
-      request.subject
-    } on ${new Date(request.preferredDate).toLocaleDateString()} at ${
-      request.preferredTime
-    }. Please review and respond.`;
-
-    const finalMessage = message || defaultMessage;
-
-    // TODO: Integrate with actual WhatsApp API
-    console.log('WhatsApp Notification:', {
-      to: tutor.phone,
-      message: finalMessage,
-      requestId: request._id,
-      tutorId: tutor._id,
-    });
-
-    res.json({
-      success: true,
-      message: 'Request notification sent successfully',
-      data: {
-        requestId: request._id,
-        tutorPhone: tutor.phone,
-        message: finalMessage,
-      },
-    });
-  } catch (error) {
-    console.error('Send request notification error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error while sending request notification',
     });
   }
 };

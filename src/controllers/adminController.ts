@@ -3,7 +3,7 @@ import { User, IUser } from '../models/User';
 import { Types } from 'mongoose';
 import { ClassSession, IClassSession } from '../models/ClassSession';
 import { StudyMaterial, IStudyMaterial } from '../models/StudyMaterial';
-import { SlotRequest, ISlotRequest } from '../models/SlotRequest';
+
 import EmailService from  '../services/emailService';
 
 interface AuthRequest extends Request {
@@ -24,8 +24,7 @@ export const getSystemStats = async (
       totalTutors,
       totalSessions,
       totalMaterials,
-      totalRequests,
-      pendingRequests,
+      pendingSlotRequests,
       completedSessions,
     ] = await Promise.all([
       User.countDocuments(),
@@ -33,8 +32,7 @@ export const getSystemStats = async (
       User.countDocuments({ role: 'tutor' }),
       ClassSession.countDocuments(),
       StudyMaterial.countDocuments(),
-      SlotRequest.countDocuments(),
-      SlotRequest.countDocuments({ status: 'pending' }),
+      ClassSession.countDocuments({ type: 'slot_request', status: 'pending' }),
       ClassSession.countDocuments({ status: 'completed' }),
     ]);
 
@@ -45,10 +43,11 @@ export const getSystemStats = async (
       .populate('tutorId', 'name')
       .populate('studentId', 'name');
 
-    const recentRequests = await SlotRequest.find()
-      .sort({ requestedAt: -1 })
+    const recentSlotRequests = await ClassSession.find({ type: 'slot_request' })
+      .sort({ createdAt: -1 })
       .limit(5)
-      .populate('studentId', 'name');
+      .populate('createdBy', 'name')
+      .populate('tutor', 'name');
 
     res.json({
       success: true,
@@ -65,13 +64,12 @@ export const getSystemStats = async (
         materials: {
           total: totalMaterials,
         },
-        requests: {
-          total: totalRequests,
-          pending: pendingRequests,
+        slotRequests: {
+          pending: pendingSlotRequests,
         },
         recentActivity: {
           sessions: recentSessions,
-          requests: recentRequests,
+          slotRequests: recentSlotRequests,
         },
       },
     });
@@ -249,17 +247,18 @@ export const deleteUser = async (
     }
 
     // Check if user has associated data
-    const [sessions, materials, requests] = await Promise.all([
+    const [sessions, materials, slotRequests] = await Promise.all([
       ClassSession.countDocuments({
-        $or: [{ tutorId: user._id }, { studentId: user._id }],
+        $or: [{ tutor: user._id }, { studentId: user._id }],
       }),
       StudyMaterial.countDocuments({ uploadedBy: user._id }),
-      SlotRequest.countDocuments({
-        $or: [{ studentId: user._id }, { assignedTutor: user._id }],
+      ClassSession.countDocuments({
+        type: 'slot_request',
+        $or: [{ createdBy: user._id }, { tutor: user._id }],
       }),
     ]);
 
-    if (sessions > 0 || materials > 0 || requests > 0) {
+    if (sessions > 0 || materials > 0 || slotRequests > 0) {
       res.status(400).json({
         success: false,
         message:

@@ -1,7 +1,6 @@
 import express from 'express';
 import {
   sendSessionReminder,
-  sendRequestNotification,
   sendBulkNotification,
   getWhatsAppStatus,
   configureWhatsApp,
@@ -33,13 +32,6 @@ router.post('/configure', authorize('admin'), configureWhatsApp);
 
 // POST /api/whatsapp/send-reminder - Send session reminder (Admin, Tutor)
 router.post('/send-reminder', authorize('admin', 'tutor'), sendSessionReminder);
-
-// POST /api/whatsapp/send-request-notification - Send request notification (Admin only)
-router.post(
-  '/send-request-notification',
-  authorize('admin'),
-  sendRequestNotification
-);
 
 // POST /api/whatsapp/send-bulk - Send bulk notification (Admin only)
 router.post('/send-bulk', authorize('admin'), sendBulkNotification);

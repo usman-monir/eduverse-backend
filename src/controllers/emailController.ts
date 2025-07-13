@@ -179,10 +179,10 @@ export const sendSessionReminder = async (
   }
 };
 
-// @desc    Send slot request notification to tutor
-// @route   POST /api/email/slot-request-notification
+// @desc    Send session request notification to tutor
+// @route   POST /api/email/session-request-notification
 // @access  Private (Admin)
-export const sendSlotRequestNotification = async (
+export const sendSessionRequestNotification = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
@@ -197,7 +197,7 @@ export const sendSlotRequestNotification = async (
       return;
     }
 
-    const success = await emailService.sendSlotRequestNotification({
+    const success = await emailService.sendSessionRequestNotification({
       studentName,
       tutorName: tutorEmail, // email address
       subject,
@@ -210,19 +210,19 @@ export const sendSlotRequestNotification = async (
     if (success) {
       res.json({
         success: true,
-        message: 'Slot request notification sent successfully',
+        message: 'Session request notification sent successfully',
       });
     } else {
       res.status(500).json({
         success: false,
-        message: 'Failed to send slot request notification',
+        message: 'Failed to send session request notification',
       });
     }
   } catch (error) {
-    console.error('Slot request notification error:', error);
+    console.error('Session request notification error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error while sending slot request notification',
+      message: 'Server error while sending session request notification',
     });
   }
 };

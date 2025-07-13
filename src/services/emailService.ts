@@ -23,7 +23,7 @@ interface SessionReminderData {
   meetingLink?: string;
 }
 
-interface SlotRequestNotificationData {
+interface SessionRequestNotificationData {
   studentName: string;
   tutorName: string;
   subject: string;
@@ -38,6 +38,32 @@ interface AdminApprovalData {
   role: string;
   approvalUrl: string;
   adminEmail: string;
+}
+
+interface SlotRequestApprovalData {
+  studentEmail: string;
+  studentName: string;
+  tutorName: string;
+  subject: string;
+  date: string;
+  time: string;
+  duration: string;
+  description?: string;
+  meetingLink?: string;
+  approvedBy: string;
+}
+
+interface SlotRequestRejectionData {
+  studentEmail: string;
+  studentName: string;
+  tutorName: string;
+  subject: string;
+  date: string;
+  time: string;
+  duration: string;
+  description?: string;
+  rejectedBy: string;
+  rejectionReason?: string;
 }
 
 class EmailService {
@@ -65,11 +91,15 @@ class EmailService {
         text: options.text,
       };
 
+      console.log('Attempting to send email to:', options.to);
+      console.log('Email subject:', options.subject);
+      
       await this.transporter.sendMail(mailOptions);
       console.log(`Email sent successfully to ${options.to}`);
       return true;
     } catch (error) {
       console.error('Email sending failed:', error);
+      console.error('Error details:', error instanceof Error ? error.message : 'Unknown error');
       return false;
     }
   }
@@ -176,8 +206,8 @@ class EmailService {
     });
   }
 
-  // Slot request notification to tutor
-  async sendSlotRequestNotification(data: SlotRequestNotificationData): Promise<boolean> {
+  // Session request notification to tutor
+  async sendSessionRequestNotification(data: SessionRequestNotificationData): Promise<boolean> {
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -351,6 +381,123 @@ class EmailService {
     return this.sendEmail({
       to: data.email,
       subject: 'Your Account Has Been Approved!',
+      html,
+    });
+  }
+
+  // Send slot request approval email to student
+  async sendSlotRequestApprovalEmail(data: SlotRequestApprovalData): Promise<boolean> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="margin: 0; font-size: 28px;">✅ Session Request Approved!</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Your slot request has been approved</p>
+        </div>
+        
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <h2 style="color: #333; margin-bottom: 20px;">Hello ${data.studentName}!</h2>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            Great news! Your session request has been approved by ${data.approvedBy}. Your session is now confirmed and ready to go.
+          </p>
+          
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #333; margin-top: 0;">Session Details</h3>
+            <div style="color: #666; line-height: 1.8;">
+              <p><strong>Subject:</strong> ${data.subject}</p>
+              <p><strong>Tutor:</strong> ${data.tutorName}</p>
+              <p><strong>Date:</strong> ${data.date}</p>
+              <p><strong>Time:</strong> ${data.time}</p>
+              <p><strong>Duration:</strong> ${data.duration}</p>
+              ${data.description ? `<p><strong>Your Message:</strong> ${data.description}</p>` : ''}
+            </div>
+          </div>
+          
+          ${data.meetingLink ? `
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${data.meetingLink}" style="background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                Join Session
+              </a>
+            </div>
+          ` : ''}
+          
+          <p style="color: #666; font-size: 14px; margin-top: 30px;">
+            Please be ready 5 minutes before the scheduled time. If you have any questions, contact your tutor or our support team.
+          </p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
+          <p>© 2024 EduPortal. All rights reserved.</p>
+        </div>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to: data.studentEmail,
+      subject: `Session Request Approved - ${data.subject} with ${data.tutorName}`,
+      html,
+    });
+  }
+
+  // Send slot request rejection email to student
+  async sendSlotRequestRejectionEmail(data: SlotRequestRejectionData): Promise<boolean> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="margin: 0; font-size: 28px;">❌ Session Request Update</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Your slot request could not be approved</p>
+        </div>
+        
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <h2 style="color: #333; margin-bottom: 20px;">Hello ${data.studentName},</h2>
+          
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            We regret to inform you that your session request could not be approved at this time. This decision was made by ${data.rejectedBy}.
+          </p>
+          
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #333; margin-top: 0;">Request Details</h3>
+            <div style="color: #666; line-height: 1.8;">
+              <p><strong>Subject:</strong> ${data.subject}</p>
+              <p><strong>Tutor:</strong> ${data.tutorName}</p>
+              <p><strong>Date:</strong> ${data.date}</p>
+              <p><strong>Time:</strong> ${data.time}</p>
+              <p><strong>Duration:</strong> ${data.duration}</p>
+              ${data.description ? `<p><strong>Your Message:</strong> ${data.description}</p>` : ''}
+            </div>
+          </div>
+          
+          ${data.rejectionReason ? `
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <h4 style="color: #856404; margin-top: 0;">Reason for Rejection</h4>
+              <p style="color: #856404; margin-bottom: 0;">${data.rejectionReason}</p>
+            </div>
+          ` : ''}
+          
+          <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h4 style="color: #1976d2; margin-top: 0;">What You Can Do Next</h4>
+            <ul style="color: #1976d2; line-height: 1.6;">
+              <li>Submit a new request with different timing</li>
+              <li>Choose a different tutor for the same subject</li>
+              <li>Contact our support team for assistance</li>
+              <li>Check available sessions in your dashboard</li>
+            </ul>
+          </div>
+          
+          <p style="color: #666; font-size: 14px; margin-top: 30px;">
+            We apologize for any inconvenience. Please feel free to submit a new request or contact our support team if you need assistance.
+          </p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
+          <p>© 2024 EduPortal. All rights reserved.</p>
+        </div>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to: data.studentEmail,
+      subject: `Session Request Update - ${data.subject}`,
       html,
     });
   }
