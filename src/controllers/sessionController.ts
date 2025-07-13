@@ -405,7 +405,7 @@ export const bookSession = async (
 
     // Update session status to booked if it has students
     if (session.enrolledStudents.length > 0) {
-      session.status = 'booked';
+    session.status = 'booked';
     }
 
     await session.save();
@@ -600,11 +600,11 @@ export const updateSessionStatus = async (
       const isCreator = createdById === userId;
       const isTutor = tutorId === userId;
       if (!isCreator && !isTutor) {
-        res.status(403).json({
-          success: false,
+      res.status(403).json({
+        success: false,
           message: 'You can only update sessions you created or where you are the tutor',
-        });
-        return;
+      });
+      return;
       }
     }
 
@@ -661,11 +661,11 @@ export const updateSession = async (
       const isCreator = createdById === userId;
       const isTutor = tutorId === userId;
       if (!isCreator && !isTutor) {
-        res.status(403).json({
-          success: false,
+      res.status(403).json({
+        success: false,
           message: 'You can only update sessions you created or where you are the tutor',
-        });
-        return;
+      });
+      return;
       }
     }
 
@@ -682,7 +682,7 @@ export const updateSession = async (
     ];
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) {
-        (session as any)[field] = req.body[field];
+          (session as any)[field] = req.body[field];
       }
     });
 
@@ -731,11 +731,11 @@ export const deleteSession = async (
       const isCreator = createdById === userId;
       const isTutor = tutorId === userId;
       if (!isCreator && !isTutor) {
-        res.status(403).json({
-          success: false,
+      res.status(403).json({
+        success: false,
           message: 'You can only delete sessions you created or where you are the tutor',
-        });
-        return;
+      });
+      return;
       }
     }
 
