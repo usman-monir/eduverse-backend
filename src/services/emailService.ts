@@ -66,6 +66,14 @@ interface SlotRequestRejectionData {
   rejectionReason?: string;
 }
 
+interface InvitationEmailData {
+  email: string;
+  name: string;
+  role: string;
+  temporaryPassword: string;
+  loginUrl: string;
+}
+
 class EmailService {
   private transporter: nodemailer.Transporter;
 
@@ -498,6 +506,69 @@ class EmailService {
     return this.sendEmail({
       to: data.studentEmail,
       subject: `Session Request Update - ${data.subject}`,
+      html,
+    });
+  }
+
+  // Send invitation email to new user
+  async sendInvitationEmail(data: InvitationEmailData): Promise<boolean> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+        <div style="background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #4f46e5; margin: 0; font-size: 28px;">🎉 You're Invited!</h1>
+          </div>
+          
+          <div style="margin-bottom: 25px;">
+            <h2 style="color: #333; margin-bottom: 15px;">Hello ${data.name},</h2>
+            <p style="color: #666; line-height: 1.6; margin-bottom: 15px;">
+              You've been invited to join EduPortal as a <strong>${data.role}</strong>. Your account has been created and you can now log in using the credentials below.
+            </p>
+            <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+              We're excited to have you on board and look forward to helping you achieve your learning goals.
+            </p>
+          </div>
+          
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4f46e5;">
+            <h3 style="color: #333; margin-top: 0; margin-bottom: 15px;">Your Login Credentials</h3>
+            <div style="color: #666; line-height: 1.8;">
+              <p><strong>Email:</strong> ${data.email}</p>
+              <p><strong>Temporary Password:</strong> <span style="background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-family: monospace;">${data.temporaryPassword}</span></p>
+            </div>
+            <p style="color: #dc3545; font-size: 14px; margin-top: 15px; margin-bottom: 0;">
+              ⚠️ Please change your password after your first login for security.
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${data.loginUrl}" style="background: #4f46e5; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px;">
+              Login to Your Account
+            </a>
+          </div>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <h3 style="color: #333; margin-bottom: 15px;">What's Next?</h3>
+            <ul style="color: #666; line-height: 1.8; padding-left: 20px;">
+              <li>Log in with your credentials</li>
+              <li>Complete your profile</li>
+              <li>Explore available courses and tutors</li>
+              <li>Book your first session</li>
+              <li>Access study materials</li>
+            </ul>
+          </div>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p style="color: #888; font-size: 14px; margin: 0;">
+              If you have any questions or need assistance, please don't hesitate to contact our support team.
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to: data.email,
+      subject: 'Welcome to EduPortal - Your Account is Ready!',
       html,
     });
   }

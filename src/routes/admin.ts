@@ -9,6 +9,7 @@ import {
   getAdminMaterials,
   getAllTutorsWithSubjects,
   approveUser,
+  inviteUser,
 } from '../controllers/adminController';
 import { authenticate, authorize } from '../middleware/auth';
 
@@ -17,19 +18,19 @@ const router = express.Router();
 // Public route to get all tutors with subjects
 router.get('/tutors', getAllTutorsWithSubjects);
 
-// All routes require admin authentication
-router.use(authenticate);
-router.use(authorize('admin'));
+// Admin only routes
+router.use(authenticate, authorize('admin'));
 
-// System statistics
+// System stats
 router.get('/stats', getSystemStats);
 
 // User management
 router.get('/users', getUsers);
 router.get('/users/:id', getUserById);
 router.put('/users/:id', updateUser);
-router.put('/users/:id/approve', approveUser);
 router.delete('/users/:id', deleteUser);
+router.put('/users/:id/approve', approveUser);
+router.post('/users/invite', inviteUser);
 
 // Session management
 router.get('/sessions', getAdminSessions);

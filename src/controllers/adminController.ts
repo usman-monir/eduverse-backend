@@ -339,6 +339,88 @@ export const approveUser = async (
   }
 };
 
+// @desc    Invite new user (Admin only)
+// @route   POST /api/admin/users/invite
+// @access  Private (Admin only)
+export const inviteUser = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { name, email, role, temporaryPassword, phone, subjects, experience } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !role || !temporaryPassword) {
+      res.status(400).json({
+        success: false,
+        message: 'Name, email, role, and temporary password are required',
+      });
+      return;
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      res.status(400).json({
+        success: false,
+        message: 'User with this email already exists',
+      });
+      return;
+    }
+
+    // Create user with active status (no approval needed for admin-created users)
+    const user = new User({
+      name,
+      email,
+      password: temporaryPassword,
+      role,
+      phone,
+      subjects: role === 'tutor' ? subjects : undefined,
+      experience: role === 'tutor' ? experience : undefined,
+      status: 'active', // Admin-created users are automatically active
+    });
+
+    await user.save();
+
+    // Send invitation email
+    try {
+      const loginUrl = `${process.env.CORS_ORIGIN || 'http://localhost:3000'}/login`;
+      
+      await EmailService.sendInvitationEmail({
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        temporaryPassword,
+        loginUrl,
+      });
+    } catch (emailError) {
+      console.error('Failed to send invitation email:', emailError);
+      // Continue with user creation even if email fails
+    }
+
+    res.status(201).json({
+      success: true,
+      data: {
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          status: user.status,
+          joinedDate: user.joinedDate,
+        },
+      },
+      message: 'User invited successfully. Invitation email sent.',
+    });
+  } catch (error) {
+    console.error('Invite user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while inviting user',
+    });
+  }
+};
+
 // @desc    Get all sessions with filters
 // @route   GET /api/admin/sessions
 // @access  Private (Admin)
