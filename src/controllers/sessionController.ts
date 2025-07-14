@@ -29,6 +29,19 @@ export const getSessions = async (
 
     const filter: any = {};
 
+    // Role-based filtering if authenticated
+    // @ts-ignore
+    const user = req.user;
+    if (user) {
+      if (user.role === 'tutor') {
+        filter.$or = [
+          { tutor: user._id },
+          { createdBy: user._id }
+        ];
+      }
+      // Students see all sessions; Admin sees all sessions
+    }
+
     // Apply filters
     if (status) filter.status = status;
     if (subject) filter.subject = { $regex: subject as string, $options: 'i' };
@@ -365,7 +378,7 @@ export const bookSession = async (
       return;
     }
 
-    if (session.status !== 'available') {
+    if (session.status !== 'available' && session.status !== 'booked') {
       res.status(400).json({
         success: false,
         message: 'Session is not available for booking',
@@ -395,7 +408,7 @@ export const bookSession = async (
 
     // Update session status to booked if it has students
     if (session.enrolledStudents.length > 0) {
-    session.status = 'booked';
+      session.status = 'booked';
     }
 
     await session.save();
