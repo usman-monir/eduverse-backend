@@ -13,7 +13,6 @@ export interface IClassSession extends Document {
     studentName: string;
     enrolledAt: Date;
   }>;
-  maxStudents: number;
   meetingLink?: string;
   description?: string;
   price?: number;
@@ -22,8 +21,6 @@ export interface IClassSession extends Document {
   createdAt: Date;
   updatedAt: Date;
   // Virtual properties
-  isFull: boolean;
-  availableSpots: number;
   enrollmentCount: number;
 }
 
@@ -81,11 +78,6 @@ const classSessionSchema = new Schema<IClassSession>(
         },
       },
     ],
-    maxStudents: {
-      type: Number,
-      default: 10,
-      min: [1, 'Max students must be at least 1'],
-    },
     meetingLink: {
       type: String,
       trim: true,
@@ -122,15 +114,6 @@ classSessionSchema.index({ 'enrolledStudents.studentId': 1, status: 1 });
 classSessionSchema.index({ date: 1, status: 1 });
 classSessionSchema.index({ createdBy: 1, status: 1 });
 
-// Virtual for checking if session is full
-classSessionSchema.virtual('isFull').get(function() {
-  return this.enrolledStudents.length >= this.maxStudents;
-});
-
-// Virtual for available spots
-classSessionSchema.virtual('availableSpots').get(function() {
-  return Math.max(0, this.maxStudents - this.enrolledStudents.length);
-});
 
 // Virtual for enrollment count
 classSessionSchema.virtual('enrollmentCount').get(function() {

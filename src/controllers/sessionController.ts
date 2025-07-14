@@ -182,7 +182,7 @@ export const createSession = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { subject, date, time, duration, status, description, meetingLink, price, tutorId, maxStudents } =
+    const { subject, date, time, duration, status, description, meetingLink, price, tutorId } =
       req.body;
 
     // Validate user can create sessions
@@ -231,7 +231,6 @@ export const createSession = async (
       description,
       meetingLink,
       price,
-      maxStudents: maxStudents || 10,
       type: sessionType,
       createdBy: req.user?._id as mongoose.Types.ObjectId,
     });
@@ -370,15 +369,6 @@ export const bookSession = async (
       res.status(400).json({
         success: false,
         message: 'Session is not available for booking',
-      });
-      return;
-    }
-
-    // Check if session is full
-    if (session.isFull) {
-      res.status(400).json({
-        success: false,
-        message: 'Session is full and cannot accept more students',
       });
       return;
     }
@@ -678,7 +668,6 @@ export const updateSession = async (
       'status',
       'meetingLink',
       'description',
-      'maxStudents',
     ];
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) {
