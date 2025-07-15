@@ -73,3 +73,32 @@ export const authorizeStudent = authorize('student');
 export const authorizeTutor = authorize('tutor');
 export const authorizeAdmin = authorize('admin');
 export const authorizeTutorOrAdmin = authorize('tutor', 'admin');
+
+
+
+export const createAdminUser = async (): Promise<void> => {
+  try {
+    const existingAdmin = await User.findOne({ role: 'admin' });
+
+    if (existingAdmin) {
+      console.log('Admin user already exists.');
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash('Admin@123', 12); 
+
+    const adminUser = new User({
+      name: 'Admin',
+      email: 'admin@eduverse.com',
+      password: hashedPassword,
+      role: 'admin',
+      status: 'active',
+      joinedDate: new Date(),
+    });
+
+    await adminUser.save();
+    console.log('Admin user created successfully.');
+  } catch (error) {
+    console.error('Error creating admin user:', error);
+  }
+};
