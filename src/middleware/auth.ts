@@ -85,12 +85,10 @@ export const createAdminUser = async (): Promise<void> => {
       return;
     }
 
-    const hashedPassword = await bcrypt.hash('Admin@123', 12); 
-
     const adminUser = new User({
       name: 'Admin',
       email: 'admin@eduverse.com',
-      password: hashedPassword,
+      password: 'Admin@123',
       role: 'admin',
       status: 'active',
       joinedDate: new Date(),
