@@ -520,13 +520,14 @@ export const bookSession = async (
 // @desc    Approve/Reject slot request (Tutors & Admins only)
 // @route   PUT /api/sessions/:id/approve
 // @access  Private (Tutor, Admin)
+
 export const approveSlotRequest = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
     const { approved, notes } = req.body;
-    const user = req.user as IUser; // 👈 Cast once
+    const user = req.user as IUser;
 
     const session = await ClassSession.findById(req.params.id);
 
@@ -544,27 +545,43 @@ export const approveSlotRequest = async (
       res.status(400).json({ success: false, message: 'This slot request has already been processed' });
       return;
     }
+
     const userId = user._id as mongoose.Types.ObjectId;
     const canApprove =
       user.role === 'admin' ||
       (user.role === 'tutor' && session.tutor.toString() === userId.toString());
 
     if (!canApprove) {
-      res.status(403).json({ success: false, message: 'You can only approve requests for your own sessions' });
+      res.status(403).json({
+        success: false,
+        message: 'You can only approve requests for your own sessions',
+      });
       return;
     }
 
     if (approved) {
       session.status = 'approved';
 
-      // Add student object properly
+      // ✅ Add student object
       const student = await User.findById(session.createdBy);
       session.students = [{
         studentId: session.createdBy,
         studentName: student?.name || undefined,
       }];
 
-      // Send approval email
+      // ✅ Generate Google Meet Link
+      const startDateTime = new Date(session.date);
+      const durationMinutes = parseInt(session.duration.split(' ')[0]) || 60;
+      const endDateTime = new Date(startDateTime.getTime() + durationMinutes * 60 * 1000);
+
+      const { meetLink } = await generateGoogleMeetLink(
+        session.subject,
+        startDateTime.toISOString(),
+        endDateTime.toISOString()
+      );
+      session.meetingLink = meetLink ?? undefined;
+
+      // ✅ Send approval email
       const tutor = await User.findById(session.tutor);
       if (student && tutor) {
         await EmailService.sendSlotRequestApprovalEmail({
@@ -576,7 +593,7 @@ export const approveSlotRequest = async (
           time: session.time,
           duration: session.duration,
           description: session.description,
-          meetingLink: session.meetingLink,
+          meetingLink: meetLink ?? undefined,
           approvedBy: user.name || 'Admin',
         });
       }
@@ -619,6 +636,7 @@ export const approveSlotRequest = async (
     });
   }
 };
+
 
 
 // @desc    Update session status (Tutors & Admins only)
