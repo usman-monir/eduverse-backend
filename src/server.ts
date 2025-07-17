@@ -35,7 +35,7 @@ app.use('/uploads/study-materials', (req: Request, res: Response, next: NextFunc
   res.removeHeader('X-Frame-Options');
   res.setHeader(
     'Content-Security-Policy',
-    "frame-ancestors 'self' http://localhost:8080 http://localhost:5050"
+    "frame-ancestors 'self' http://localhost:8080 http://localhost:5050" //! add production url here
   );
   next();
 });
