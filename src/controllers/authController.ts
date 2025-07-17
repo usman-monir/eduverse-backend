@@ -100,6 +100,18 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // Check accessTill for students
+    if (user.role !== 'admin' && user.accessTill) {
+      const now = new Date();
+      if (now > user.accessTill) {
+        res.status(403).json({
+          success: false,
+          message: 'Your access has been restricted by the admin. Please contact support.',
+        });
+        return;
+      }
+    }
+
     // Generate token
     const token = generateToken(user);
 

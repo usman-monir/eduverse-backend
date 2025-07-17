@@ -540,3 +540,49 @@ export const getAllTutorsWithSubjects = async (
     });
   }
 };
+
+// @desc    Restrict student access until a given date
+// @route   PUT /api/admin/users/:id/restrict-access
+// @access  Private (Admin only)
+export const updateUserAccess = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { accessTill } = req.body;
+    const user = await User.findById(id);
+    if (!user) {
+      res.status(404).json({ success: false, message: 'User not found' });
+      return;
+    }
+    if (user.role === 'admin') {
+      res.status(400).json({ success: false, message: 'admin cannot be restricted' });
+      return;
+    }
+    user.accessTill = accessTill ? new Date(accessTill) : null;
+    await user.save();
+    res.json({ success: true, data: user, message: 'Access updated' });
+  } catch (error) {
+    console.error('Restrict access error:', error);
+    res.status(500).json({ success: false, message: 'Server error while updating access' });
+  }
+};
+
+// @desc    Enable student access (remove restriction)
+// @route   PUT /api/admin/users/:id/enable-access
+// @access  Private (Admin only)
+export const enableUserAccess = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) {
+      res.status(404).json({ success: false, message: 'User not found' });
+      return;
+    }
+    
+    user.accessTill = null;
+    await user.save();
+    res.json({ success: true, data: user, message: 'Access enabled' });
+  } catch (error) {
+    console.error('Enable access error:', error);
+    res.status(500).json({ success: false, message: 'Server error while enabling access' });
+  }
+};

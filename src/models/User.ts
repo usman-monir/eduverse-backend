@@ -34,6 +34,7 @@ export interface IUser extends Document {
   completedSessions?: number;
   joinedDate: Date;
   status: 'pending' | 'active' | 'inactive';
+  accessTill: Date | null;
   subjects?: string[];
   experience?: string;
   weeklyAvailability?: IWeeklyAvailability;
@@ -114,6 +115,10 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: ['pending', 'active', 'inactive'],
       default: 'pending',
+    },
+    accessTill: {
+      type: Date,
+      default: null,
     },
     subjects: [
       {

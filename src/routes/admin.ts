@@ -10,6 +10,8 @@ import {
   getAllTutorsWithSubjects,
   approveUser,
   inviteUser,
+  updateUserAccess,
+  enableUserAccess,
 } from '../controllers/adminController';
 import { authenticate, authorize } from '../middleware/auth';
 
@@ -31,6 +33,11 @@ router.put('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
 router.put('/users/:id/approve', approveUser);
 router.post('/users/invite', inviteUser);
+
+// Restrict student access
+router.put('/users/:id/restrict-access', authenticate, authorize('admin'), updateUserAccess);
+// Enable student access
+router.put('/users/:id/enable-access', authenticate, authorize('admin'), enableUserAccess);
 
 // Session management
 router.get('/sessions', getAdminSessions);
