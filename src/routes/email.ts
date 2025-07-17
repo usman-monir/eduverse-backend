@@ -6,6 +6,7 @@ import {
   sendSessionReminder,
   sendSessionRequestNotification,
   sendAdminApprovalEmail,
+  bulkInvite,
 } from '../controllers/emailController';
 import { authenticate, authorize } from '../middleware/auth';
 
@@ -28,5 +29,8 @@ router.post('/session-request-notification', authenticate, authorize('admin'), s
 
 // Send admin approval notification (Admin only)
 router.post('/admin-approval', authenticate, authorize('admin'), sendAdminApprovalEmail);
+
+// Send bulk invitations (Admin only)
+router.post('/bulk-invite', authenticate, authorize('admin'), bulkInvite);
 
 export default router; 

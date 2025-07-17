@@ -272,4 +272,29 @@ export const sendAdminApprovalEmail = async (
       message: 'Server error while sending admin approval email',
     });
   }
+};
+
+// @desc    Send bulk invitations to students
+// @route   POST /api/email/bulk-invite
+// @access  Private (Admin)
+export const bulkInvite = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { students, slots } = req.body;
+    if (!Array.isArray(students) || students.length === 0) {
+      res.status(400).json({ success: false, message: 'No students provided' });
+      return;
+    }
+    const result = await emailService.sendBulkInvitations(students, slots);
+    res.json({
+      success: true,
+      message: `Invitations sent: ${result.sent}, failed: ${result.failed}`,
+      ...result,
+    });
+  } catch (error) {
+    console.error('Bulk invite error:', error);
+    res.status(500).json({ success: false, message: 'Server error while sending bulk invitations' });
+  }
 }; 
