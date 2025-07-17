@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/eduverse';
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/score-smart-lms';
 
 const students = Array.from({ length: 10 }, (_, i) => ({
   name: `Student ${i + 1}`,

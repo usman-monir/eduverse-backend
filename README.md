@@ -1,6 +1,6 @@
-# EduPortal Backend API
+# Score-Smart-LMS Backend API
 
-Backend API for EduPortal - A Student Portal/Booking System with class scheduling, study materials management, and WhatsApp automation.
+Backend API for Score-Smart-LMS - A Student Portal/Booking System with class scheduling, study materials management, and WhatsApp automation.
 
 ## Features
 
@@ -54,7 +54,7 @@ Backend API for EduPortal - A Student Portal/Booking System with class schedulin
 
    ```env
    PORT=5000
-   MONGODB_URI=mongodb://localhost:27017/eduportal
+   MONGODB_URI=mongodb://localhost:27017/Score-Smart-LMS
    JWT_SECRET=your-super-secret-jwt-key
    CORS_ORIGIN=http://localhost:3000
    ```
@@ -122,7 +122,7 @@ backend/
 | Variable         | Description               | Default                               |
 | ---------------- | ------------------------- | ------------------------------------- |
 | `PORT`           | Server port               | `5000`                                |
-| `MONGODB_URI`    | MongoDB connection string | `mongodb://localhost:27017/eduportal` |
+| `MONGODB_URI`    | MongoDB connection string | `mongodb://localhost:27017/Score-Smart-LMS` |
 | `JWT_SECRET`     | JWT signing secret        | Required                              |
 | `JWT_EXPIRES_IN` | JWT expiration time       | `7d`                                  |
 | `CORS_ORIGIN`    | Allowed CORS origin       | `http://localhost:3000`               |

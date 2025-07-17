@@ -88,7 +88,7 @@ export const createAdminUser = async (): Promise<void> => {
 
     const adminUser = new User({
       name: 'Admin',
-      email: 'admin@eduverse.com',
+      email: 'contact@scoresmartpte.com',
       password: 'Admin@123',
       role: 'admin',
       status: 'active',

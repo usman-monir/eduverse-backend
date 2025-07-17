@@ -117,7 +117,7 @@ class EmailService {
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-          <h1 style="margin: 0; font-size: 28px;">Welcome to EduPortal!</h1>
+          <h1 style="margin: 0; font-size: 28px;">Welcome to Score-Smart-LMS!</h1>
           <p style="margin: 10px 0 0 0; opacity: 0.9;">Your learning journey starts here</p>
         </div>
         
@@ -125,7 +125,7 @@ class EmailService {
           <h2 style="color: #333; margin-bottom: 20px;">Hello ${data.name}!</h2>
           
           <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
-            Welcome to EduPortal! Your account has been successfully created as a <strong>${data.role}</strong>.
+            Welcome to Score-Smart-LMS! Your account has been successfully created as a <strong>${data.role}</strong>.
           </p>
           
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -150,14 +150,14 @@ class EmailService {
         </div>
         
         <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-          <p>© 2024 EduPortal. All rights reserved.</p>
+          <p>© 2024 Score-Smart-LMS. All rights reserved.</p>
         </div>
       </div>
     `;
 
     return this.sendEmail({
       to: data.name, // This should be the email address
-      subject: 'Welcome to EduPortal - Your Learning Journey Begins!',
+      subject: 'Welcome to Score-Smart-LMS - Your Learning Journey Begins!',
       html,
     });
   }
@@ -202,7 +202,7 @@ class EmailService {
         </div>
         
         <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-          <p>© 2024 EduPortal. All rights reserved.</p>
+          <p>© 2024 Score-Smart-LMS. All rights reserved.</p>
         </div>
       </div>
     `;
@@ -248,7 +248,7 @@ class EmailService {
         </div>
         
         <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-          <p>© 2024 EduPortal. All rights reserved.</p>
+          <p>© 2024 Score-Smart-LMS. All rights reserved.</p>
         </div>
       </div>
     `;
@@ -297,7 +297,7 @@ class EmailService {
         </div>
         
         <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-          <p>© 2024 EduPortal. All rights reserved.</p>
+          <p>© 2024 Score-Smart-LMS. All rights reserved.</p>
         </div>
       </div>
     `;
@@ -315,7 +315,7 @@ class EmailService {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
           <h1 style="margin: 0; font-size: 28px;">Email Test</h1>
-          <p style="margin: 10px 0 0 0; opacity: 0.9;">EduPortal Email System</p>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Score-Smart-LMS Email System</p>
         </div>
         
         <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
@@ -340,14 +340,14 @@ class EmailService {
         </div>
         
         <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-          <p>© 2024 EduPortal. All rights reserved.</p>
+          <p>© 2024 Score-Smart-LMS. All rights reserved.</p>
         </div>
       </div>
     `;
 
     return this.sendEmail({
       to,
-      subject: 'EduPortal Email System Test',
+      subject: 'Score-Smart-LMS Email System Test',
       html,
     });
   }
@@ -435,7 +435,7 @@ class EmailService {
         </div>
         
         <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-          <p>© 2024 EduPortal. All rights reserved.</p>
+          <p>© 2024 Score-Smart-LMS. All rights reserved.</p>
         </div>
       </div>
     `;
@@ -498,7 +498,7 @@ class EmailService {
         </div>
         
         <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-          <p>© 2024 EduPortal. All rights reserved.</p>
+          <p>© 2024 Score-Smart-LMS. All rights reserved.</p>
         </div>
       </div>
     `;
@@ -522,7 +522,7 @@ class EmailService {
           <div style="margin-bottom: 25px;">
             <h2 style="color: #333; margin-bottom: 15px;">Hello ${data.name},</h2>
             <p style="color: #666; line-height: 1.6; margin-bottom: 15px;">
-              You've been invited to join EduPortal as a <strong>${data.role}</strong>. Your account has been created and you can now log in using the credentials below.
+              You've been invited to join Score-Smart-LMS as a <strong>${data.role}</strong>. Your account has been created and you can now log in using the credentials below.
             </p>
             <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
               We're excited to have you on board and look forward to helping you achieve your learning goals.
@@ -568,7 +568,7 @@ class EmailService {
 
     return this.sendEmail({
       to: data.email,
-      subject: 'Welcome to EduPortal - Your Account is Ready!',
+      subject: 'Welcome to Score-Smart-LMS - Your Account is Ready!',
       html,
     });
   }
@@ -596,7 +596,7 @@ class EmailService {
               <h2 style="color: #333; margin-bottom: 20px;">Hello ${student.name},</h2>
               <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
                 We are excited to let you know that new session slots are available for booking!<br/>
-                Please log in to your EduPortal account and book a session that fits your schedule.
+                Please log in to your Score-Smart-LMS account and book a session that fits your schedule.
               </p>
               <h3 style="color: #333; margin-top: 0;">Available Slots:</h3>
               ${slotList}
@@ -605,7 +605,7 @@ class EmailService {
               </p>
             </div>
             <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-              <p>© 2024 EduPortal. All rights reserved.</p>
+              <p>© 2024 Score-Smart-LMS. All rights reserved.</p>
             </div>
           </div>
         `;

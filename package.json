@@ -1,7 +1,7 @@
 {
-  "name": "eduportal-backend",
+  "name": "Score-Smart-LMS-backend",
   "version": "1.0.0",
-  "description": "Backend API for EduPortal - Student Portal/Booking System",
+  "description": "Backend API for Score-Smart-LMS - Student Portal/Booking System",
   "main": "dist/server.js",
   "types": "module",
   "scripts": {
