@@ -45,7 +45,7 @@ app.use('/uploads/study-materials', express.static(path.join(__dirname, '../uplo
 app.get('/health', (req: Request, res: Response) => {
   res.json({
     success: true,
-    message: 'EduPortal API is running',
+    message: 'Score-Smart-LMS API is running',
     timestamp: new Date().toISOString(),
   });
 });

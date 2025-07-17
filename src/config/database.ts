@@ -5,7 +5,7 @@ import { createAdminUser } from '../middleware/auth';
 dotenv.config();
 
 const MONGODB_URI =
-  process.env.MONGODB_URI || 'mongodb://localhost:27017/eduportal';
+  process.env.MONGODB_URI || 'mongodb://localhost:27017/Score-Smart-LMS';
 
 export const connectDB = async (): Promise<void> => {
   try {
