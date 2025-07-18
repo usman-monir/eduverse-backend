@@ -2,9 +2,12 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// Create uploads directory if it doesn't exist
-const uploadDir = './uploads';
-const studyMaterialsDir = './uploads/study-materials';
+// Use /tmp for Vercel compatibility
+const tmpDir = '/tmp';
+const uploadDir = path.join(tmpDir, 'uploads');
+const studyMaterialsDir = path.join(uploadDir, 'study-materials');
+
+// Create directories if they don't exist
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -14,16 +17,14 @@ if (!fs.existsSync(studyMaterialsDir)) {
 
 // Configure storage
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Store study materials in a subfolder if the route matches
+  destination: (req: any, file: any, cb: any) => {
     if (req.baseUrl && req.baseUrl.includes('study-material')) {
       cb(null, studyMaterialsDir);
     } else {
       cb(null, uploadDir);
     }
   },
-  filename: (req, file, cb) => {
-    // Generate unique filename with timestamp
+  filename: (req:any, file:any, cb:any) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(
       null,
@@ -38,7 +39,6 @@ const fileFilter = (
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
-  // Allowed file types
   const allowedTypes = [
     'application/pdf',
     'application/msword',
@@ -69,12 +69,12 @@ export const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760'), // 10MB default
-    files: 1, // Only allow 1 file per request
+    fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760'), // 10MB
+    files: 1,
   },
 });
 
-// Error handling middleware for multer
+// Multer error handler
 export const handleUploadError = (
   error: any,
   req: any,
