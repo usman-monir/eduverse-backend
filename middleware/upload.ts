@@ -1,37 +1,45 @@
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
-// Use /tmp for Vercel compatibility
-const tmpDir = '/tmp';
-const uploadDir = path.join(tmpDir, 'uploads');
-const studyMaterialsDir = path.join(uploadDir, 'study-materials');
+// Configure Cloudinary with env variables
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+  api_key: process.env.CLOUDINARY_API_KEY!,
+  api_secret: process.env.CLOUDINARY_API_SECRET!,
+});
 
-// Create directories if they don't exist
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-if (!fs.existsSync(studyMaterialsDir)) {
-  fs.mkdirSync(studyMaterialsDir, { recursive: true });
-}
+// Setup Cloudinary storage
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req: any, file: Express.Multer.File) => {
+    // Determine folder based on route
+    const folder = req.baseUrl && req.baseUrl.includes('study-material')
+      ? 'study-materials'
+      : 'general-uploads';
 
-// Configure storage
-const storage = multer.diskStorage({
-  destination: (req: any, file: any, cb: any) => {
-    if (req.baseUrl && req.baseUrl.includes('study-material')) {
-      cb(null, studyMaterialsDir);
-    } else {
-      cb(null, uploadDir);
-    }
-  },
-  filename: (req:any, file:any, cb:any) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname)
-    );
+    return {
+      folder,
+      resource_type: 'auto', // Supports image/video/pdf etc.
+      public_id: `${file.fieldname}-${Date.now()}`, // Optional: custom naming
+    };
   },
 });
+
+// Allowed file types
+const allowedTypes = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'video/mp4',
+  'video/ogg',
+  'video/webm',
+];
 
 // File filter
 const fileFilter = (
@@ -39,42 +47,24 @@ const fileFilter = (
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ) => {
-  const allowedTypes = [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.ms-powerpoint',
-    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'video/mp4',
-    'video/ogg',
-    'video/webm',
-  ];
-
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(
-      new Error(
-        'Invalid file type. Only PDF, DOC, DOCX, PPT, PPTX, JPG, JPEG, PNG files, MP4, OGG, WEBM are allowed.'
-      )
-    );
+    cb(new Error('Invalid file type. Allowed types: PDF, DOC, DOCX, PPT, PPTX, JPG, PNG, MP4, OGG, WEBM.'));
   }
 };
 
-// Configure multer
+// Configure Multer
 export const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
+  storage,
+  fileFilter,
   limits: {
     fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760'), // 10MB
     files: 1,
   },
 });
 
-// Multer error handler
+// Error handling middleware
 export const handleUploadError = (
   error: any,
   req: any,
@@ -91,7 +81,7 @@ export const handleUploadError = (
     if (error.code === 'LIMIT_FILE_COUNT') {
       return res.status(400).json({
         success: false,
-        message: 'Too many files. Only 1 file allowed per request.',
+        message: 'Only 1 file allowed per request.',
       });
     }
   }
