@@ -31,15 +31,15 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve uploads folder statically
-app.use('/uploads/study-materials', (req: Request, res: Response, next: NextFunction) => {
-  res.removeHeader('X-Frame-Options');
-  res.setHeader(
-    'Content-Security-Policy',
-    "frame-ancestors 'self' http://localhost:8080 http://localhost:5050" //! add production url here
-  );
-  next();
-});
-app.use('/uploads/study-materials', express.static(path.join(__dirname, '../uploads/study-materials')));
+// app.use('/uploads/study-materials', (req: Request, res: Response, next: NextFunction) => {
+//   res.removeHeader('X-Frame-Options');
+//   res.setHeader(
+//     'Content-Security-Policy',
+//     "frame-ancestors 'self' http://localhost:8080 http://localhost:5050" //! add production url here
+//   );
+//   next();
+// });
+// app.use('/uploads/study-materials', express.static(path.join(__dirname, '../uploads/study-materials')));
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {

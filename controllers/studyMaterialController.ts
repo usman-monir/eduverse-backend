@@ -124,24 +124,24 @@ export const uploadStudyMaterial = async (
       return;
     }
 
-    const file = req.file;
-    // Always use /uploads/study-materials/ as the fileUrl prefix
-    const fileUrl = `/uploads/study-materials/${file.filename}`;
+   const file = req.file;
+const fileUrl = (file as any)?.path || '';
 
-    const material = new StudyMaterial({
-      title,
-      description,
-      fileName: file.originalname,
-      fileUrl,
-      fileType: file.mimetype.split('/')[1] as any,
-      fileSize: file.size,
-      uploadedBy: req.user?._id,
-      uploadedByName: req.user?.name,
-      subject,
-      accessLevel,
-      tags: Array.isArray(tags) ? tags : [tags],
-      collectionName: req.body.collectionName,
-    });
+const material = new StudyMaterial({
+  title,
+  description,
+  fileName: file.originalname,
+  fileUrl, // ✅ Cloudinary URL
+  fileType: file.mimetype.split('/')[1] as any,
+  fileSize: file.size,
+  uploadedBy: req.user?._id,
+  uploadedByName: req.user?.name,
+  subject,
+  accessLevel,
+  tags: Array.isArray(tags) ? tags : [tags],
+  collectionName: req.body.collectionName,
+});
+
 
     await material.save();
 
