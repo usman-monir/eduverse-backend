@@ -4,7 +4,7 @@
     "module": "commonjs",
     "lib": ["ES2020"],
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -22,9 +22,9 @@
     "moduleResolution": "node",
     "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["/**/*", "config", "controllers", "middleware", "models", "routes", "services", "utils", "server.ts"],
   "exclude": ["node_modules", "dist"]
 }
