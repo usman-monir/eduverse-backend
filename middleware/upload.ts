@@ -1,32 +1,32 @@
+// upload.ts
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
-// Configure Cloudinary with env variables
+// ✅ Cloudinary config (uses .env)
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
   api_key: process.env.CLOUDINARY_API_KEY!,
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
 
-// Setup Cloudinary storage
+// ✅ Cloudinary storage engine for Multer
 const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req: any, file: Express.Multer.File) => {
-    // Determine folder based on route
-    const folder = req.baseUrl && req.baseUrl.includes('study-material')
+    const folder = req.baseUrl?.includes('study-material')
       ? 'study-materials'
       : 'general-uploads';
 
     return {
       folder,
-      resource_type: 'auto', // Supports image/video/pdf etc.
-      public_id: `${file.fieldname}-${Date.now()}`, // Optional: custom naming
+      resource_type: 'auto',
+      public_id: `${file.fieldname}-${Date.now()}`,
     };
   },
 });
 
-// Allowed file types
+// ✅ Allowed MIME types
 const allowedTypes = [
   'application/pdf',
   'application/msword',
@@ -41,7 +41,7 @@ const allowedTypes = [
   'video/webm',
 ];
 
-// File filter
+// ✅ File filter (same signature, no change needed elsewhere)
 const fileFilter = (
   req: any,
   file: Express.Multer.File,
@@ -50,11 +50,15 @@ const fileFilter = (
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Allowed types: PDF, DOC, DOCX, PPT, PPTX, JPG, PNG, MP4, OGG, WEBM.'));
+    cb(
+      new Error(
+        'Invalid file type. Only PDF, DOC, DOCX, PPT, PPTX, JPG, JPEG, PNG, MP4, OGG, WEBM are allowed.'
+      )
+    );
   }
 };
 
-// Configure Multer
+// ✅ Final Multer config (same export)
 export const upload = multer({
   storage,
   fileFilter,
@@ -64,7 +68,7 @@ export const upload = multer({
   },
 });
 
-// Error handling middleware
+// ✅ Error handler (identical API, no changes needed)
 export const handleUploadError = (
   error: any,
   req: any,
