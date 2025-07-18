@@ -113,35 +113,37 @@ export const uploadStudyMaterial = async (
       subject,
       accessLevel = 'all',
       tags = [],
+      collectionName,
     } = req.body;
 
-    // Check if file was uploaded
-    if (!req.file) {
+    const file = req.file;
+
+    // ✅ Safely check file presence
+    if (!file || !file.path) {
+      console.error('❌ File upload failed:', file);
       res.status(400).json({
         success: false,
-        message: 'No file uploaded',
+        message: 'File upload failed or unsupported file format.',
       });
       return;
     }
 
-   const file = req.file;
-const fileUrl = (file as any)?.path || '';
+    const fileUrl = file.path; // ✅ Cloudinary URL
 
-const material = new StudyMaterial({
-  title,
-  description,
-  fileName: file.originalname,
-  fileUrl, // ✅ Cloudinary URL
-  fileType: file.mimetype.split('/')[1] as any,
-  fileSize: file.size,
-  uploadedBy: req.user?._id,
-  uploadedByName: req.user?.name,
-  subject,
-  accessLevel,
-  tags: Array.isArray(tags) ? tags : [tags],
-  collectionName: req.body.collectionName,
-});
-
+    const material = new StudyMaterial({
+      title,
+      description,
+      fileName: file.originalname,
+      fileUrl,
+      fileType: file.mimetype.split('/')[1],
+      fileSize: file.size,
+      uploadedBy: req.user?._id,
+      uploadedByName: req.user?.name,
+      subject,
+      accessLevel,
+      tags: Array.isArray(tags) ? tags : [tags],
+      collectionName,
+    });
 
     await material.save();
 
@@ -151,7 +153,7 @@ const material = new StudyMaterial({
       message: 'Study material uploaded successfully',
     });
   } catch (error) {
-    console.error('Upload study material error:', error);
+    console.error('❌ Upload study material error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error while uploading study material',
