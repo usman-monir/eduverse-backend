@@ -7,11 +7,11 @@ dotenv.config();
 const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/eduverse';
 
 const teachers = [
-  { name: 'NIM', email: 'contact@scoresmartpte.com' },
-  { name: 'Esha', email: 'contact+1@scoresmartpte.com' },
-  { name: 'Shrishti', email: 'contact+2@scoresmartpte.com' },
-  { name: 'Alisha', email: 'contact+3@scoresmartpte.com' },
-  { name: 'Lakshay', email: 'contact+4@scoresmartpte.com' },
+  { name: 'NIM', email: 'contact+1@scoresmartpte.com' },
+  { name: 'Esha', email: 'contact+2@scoresmartpte.com' },
+  { name: 'Shrishti', email: 'contact+3@scoresmartpte.com' },
+  { name: 'Alisha', email: 'contact+4@scoresmartpte.com' },
+  { name: 'Lakshay', email: 'contact+5@scoresmartpte.com' },
 ];
 
 async function seedTeachers() {
