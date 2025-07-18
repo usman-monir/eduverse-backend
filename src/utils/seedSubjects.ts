@@ -42,6 +42,7 @@ const initialSubjects = [
   { name: 'Test Preparation', category: 'Other', description: 'SAT, ACT, GRE, and other standardized tests' },
   { name: 'Study Skills', category: 'Other', description: 'Effective study techniques and time management' },
   { name: 'Public Speaking', category: 'Other', description: 'Presentation skills and communication' },
+  { name: 'General One to One Session', category: 'Other', description: 'It is a general One to One session' },
 ];
 
 export const seedSubjects = async () => {

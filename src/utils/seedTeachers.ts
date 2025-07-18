@@ -25,7 +25,7 @@ async function seedTeachers() {
         await User.create({
           name: teacher.name,
           email: teacher.email,
-          password: '1122', // Default password
+          password: 'Pass@1122', // Default password
           role: 'tutor',
           status: 'active',
         });
