@@ -2,11 +2,11 @@
   "name": "Score-Smart-LMS-backend",
   "version": "1.0.0",
   "description": "Backend API for Score-Smart-LMS - Student Portal/Booking System",
-  "main": "dist/server.js",
+  "main": "server.js",
   "types": "module",
   "scripts": {
-    "start": "node dist/server.js",
-    "dev": "nodemon src/server.ts",
+    "start": "node server.js",
+    "dev": "nodemon server.ts",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
