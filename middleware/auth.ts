@@ -84,8 +84,7 @@ export const createAdminUser = async (): Promise<void> => {
       return; 
     }
  
-    const hashedPassword = await bcrypt.hash('12345678', 12); 
-
+     
     const adminUser = new User({
       name: 'Admin',
       email: 'contact@scoresmartpte.com',
