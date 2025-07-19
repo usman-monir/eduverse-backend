@@ -22,9 +22,11 @@ const storage = new CloudinaryStorage({
       folder,
       resource_type: 'auto',
       public_id: `${file.fieldname}-${Date.now()}`,
+      type: 'authenticated', 
     };
   },
 });
+
 
 // ✅ Allowed MIME types
 const allowedTypes = [

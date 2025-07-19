@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { StudyMaterial, IStudyMaterial } from '../models/StudyMaterial';
 import { User, IUser } from '../models/User';
 import mongoose from 'mongoose';
+import { v2 as cloudinary } from 'cloudinary';
 
 interface AuthRequest extends Request {
   user?: IUser;
@@ -182,16 +183,24 @@ export const updateStudyMaterial = async (
     }
 
     // Check if user can update this material
-    if (
-      req.user?.role !== 'admin' &&
-      material.uploadedBy.toString() !== (req.user?._id as mongoose.Types.ObjectId).toString()
-    ) {
-      res.status(403).json({
+    // Only authenticated and approved users with accepted roles can access
+    if (!req.user || !['student', 'tutor', 'admin'].includes(req.user.role)) {
+       res.status(403).json({
         success: false,
-        message: 'You can only update your own materials',
+        message: 'Access denied. Only approved users can download this file.',
       });
-      return;
+      return
     }
+
+    // Optional: enforce manual approval (if stored in user model)
+    if (!req.user.status || req.user.status !== 'active') {
+       res.status(403).json({
+        success: false,
+        message: 'Your account is not active yet.',
+      });
+      return
+    }
+
 
     // Update fields
     if (title) material.title = title;
@@ -312,24 +321,47 @@ export const downloadStudyMaterial = async (
     }
 
     // Increment download count
+    // Increment download count
     material.downloadCount += 1;
     await material.save();
 
-    // For now, return the file URL
-    // In production, you might want to stream the file or implement additional security
+    // ✅ Extract Cloudinary public ID from file URL
+    const cloudinaryUrlRegex = /\/(?:v\d+\/)?([^/]+)\.[a-z]+$/i;
+    const match = material.fileUrl.match(cloudinaryUrlRegex);
+    if (!match) {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to extract Cloudinary public ID',
+      });
+      return
+    }
+
+    const publicId = match[1]; // e.g., "study-materials/file-12345678"
+
+    // ✅ Generate a signed (authenticated) URL for download
+    const signedUrl = cloudinary.url(publicId, {
+      type: 'authenticated',
+      resource_type: 'auto',
+      secure: true,
+      expires_at: Math.floor(Date.now() / 1000) + 60 * 5,
+    });
+
     res.json({
       success: true,
       data: {
-        fileUrl: material.fileUrl,
+        signedUrl,
         fileName: material.fileName,
       },
-      message: 'Download link generated',
+      message: 'Signed download link generated',
     });
-  } catch (error) {
+
+
+  }
+  catch (error) {
     console.error('Download study material error:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error while processing download',
+      message: 'Server error while downloading study material',
     });
   }
 };

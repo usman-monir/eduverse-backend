@@ -50,6 +50,17 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
+app.get('/', (req: Request, res: Response) => {
+  res.send(`
+    <h1>🎓 Score Smart LMS API</h1>
+    <p>Welcome to the Score Smart backend server.</p>
+    <ul>
+      <li><a href="/health">Health Check</a></li>
+      <li>Use <code>/api/</code> prefix to access routes</li>
+    </ul>
+  `);
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
