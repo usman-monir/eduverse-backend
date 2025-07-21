@@ -52,7 +52,7 @@ app.get('/health', (req: Request, res: Response) => {
 
 app.get('/', (req: Request, res: Response) => {
   res.send(`
-    <h1>🎓 Score Smart LMS API</h1>
+    <h1>VERCEL Score Smart LMS API</h1>
     <p>Welcome to the Score Smart backend server.</p>
     <ul>
       <li><a href="/health">Health Check</a></li>
@@ -84,14 +84,14 @@ oauth2Client.setCredentials({
 
 const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 app.post('/api/create-meeting', async (req: Request, res: Response) => {
-  const { 
-    summary, 
-    startTime, 
-    endTime, 
-    timeZone, 
-    localDateTimeString, 
-    selectedDate, 
-    selectedTime 
+  const {
+    summary,
+    startTime,
+    endTime,
+    timeZone,
+    localDateTimeString,
+    selectedDate,
+    selectedTime
   } = req.body;
 
   if (!summary || !startTime || !endTime) {
@@ -113,13 +113,13 @@ app.post('/api/create-meeting', async (req: Request, res: Response) => {
 
   const event = {
     summary,
-    start: { 
-      dateTime: startTime, 
-      timeZone: userTimeZone 
+    start: {
+      dateTime: startTime,
+      timeZone: userTimeZone
     },
-    end: { 
-      dateTime: endTime, 
-      timeZone: userTimeZone 
+    end: {
+      dateTime: endTime,
+      timeZone: userTimeZone
     },
     conferenceData: {
       createRequest: {
@@ -135,7 +135,7 @@ app.post('/api/create-meeting', async (req: Request, res: Response) => {
       requestBody: event,
       conferenceDataVersion: 1,
     });
-    
+
     console.log('Google Calendar event created:', {
       eventId: response.data.id,
       startTime: response.data.start?.dateTime,
@@ -143,8 +143,8 @@ app.post('/api/create-meeting', async (req: Request, res: Response) => {
       timeZone: response.data.start?.timeZone,
       meetLink: response.data.hangoutLink
     });
-    
-    return res.json({ 
+
+    return res.json({
       meetLink: response.data.hangoutLink,
       eventId: response.data.id,
       startTime: response.data.start?.dateTime,

@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { User, IUser } from '../models/User';
 import emailService from '../services/emailService';
+import { ClassSession } from '../models/ClassSession';
+
 
 interface AuthRequest extends Request {
   user?: IUser;
@@ -273,7 +275,6 @@ export const sendAdminApprovalEmail = async (
     });
   }
 };
-
 // @desc    Send bulk invitations to students
 // @route   POST /api/email/bulk-invite
 // @access  Private (Admin)
@@ -282,12 +283,43 @@ export const bulkInvite = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { students, slots } = req.body;
+    const { students, slots, isToday, urgentBooking } = req.body;
+    console.log('bulkInvite: isToday =', isToday);
+
+    // Validation
     if (!Array.isArray(students) || students.length === 0) {
       res.status(400).json({ success: false, message: 'No students provided' });
       return;
     }
-    const result = await emailService.sendBulkInvitations(students, slots);
+
+    if (!Array.isArray(slots) || slots.length === 0) {
+      res.status(400).json({ success: false, message: 'No slots provided' });
+      return;
+    }
+
+    // ✅ Send invitation emails, optionally pass flags for custom logic
+    const result = await emailService.sendBulkInvitations(students, slots, {
+      isToday: !!isToday,
+      urgentBooking: !!urgentBooking,
+    });
+
+    // ✅ If today's session, update sessions in DB to allow student visibility
+    if (isToday) {
+      const sessionIds = slots
+        .filter((s) => s._id)
+        .map((s) => s._id);
+      console.log('Session IDs to update:', sessionIds);
+      if (sessionIds.length > 0) {
+        const updateResult = await ClassSession.updateMany(
+          { _id: { $in: sessionIds } },
+          { $set: { isTodayInviteTriggered: true } }
+        );
+        console.log('Update result:', updateResult);
+
+      }
+    }
+
+    // ✅ Send success response
     res.json({
       success: true,
       message: `Invitations sent: ${result.sent}, failed: ${result.failed}`,
@@ -297,4 +329,5 @@ export const bulkInvite = async (
     console.error('Bulk invite error:', error);
     res.status(500).json({ success: false, message: 'Server error while sending bulk invitations' });
   }
-}; 
+};
+

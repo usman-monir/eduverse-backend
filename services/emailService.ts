@@ -101,7 +101,7 @@ class EmailService {
 
       console.log('Attempting to send email to:', options.to);
       console.log('Email subject:', options.subject);
-      
+
       await this.transporter.sendMail(mailOptions);
       console.log(`Email sent successfully to ${options.to}`);
       return true;
@@ -573,55 +573,79 @@ class EmailService {
     });
   }
 
-  // Send bulk invitations to students (informational only, no login/password)
-  async sendBulkInvitations(students: { name: string; email: string; }[], slots: any[]): Promise<{ sent: number; failed: number; errors: any[] }> {
+
+  // Send bulk invitations to students (supports 'isToday' and 'urgentBooking' flags)
+  async sendBulkInvitations(
+    students: { name: string; email: string }[],
+    slots: any[],
+    options: { isToday?: boolean; urgentBooking?: boolean } = {}
+  ): Promise<{ sent: number; failed: number; errors: any[] }> {
     let sent = 0;
     let failed = 0;
     let errors: any[] = [];
 
-    // Format slots for email
+    const { isToday = false, urgentBooking = false } = options;
+
+    // Format slots list for email
     const slotList = Array.isArray(slots) && slots.length > 0
-      ? `<ul style="padding-left:20px;">${slots.map(slot => `<li><b>Date:</b> ${slot.date}, <b>Time:</b> ${slot.time}, <b>Tutor:</b> ${slot.tutorName}</li>`).join('')}</ul>`
+      ? `<ul style="padding-left:20px;">${slots.map(slot =>
+        `<li><b>Date:</b> ${slot.date}, <b>Time:</b> ${slot.time}, <b>Tutor:</b> ${slot.tutorName}</li>`
+      ).join('')}</ul>`
       : '<p>No available slots at this time.</p>';
+
+    // Customize subject line
+    const subject = isToday
+      ? '🚨 Urgent: Book a Session for Today!'
+      : '📅 New Tutoring Slots Available – Book Now!';
+
+    // Customize extra message for urgent booking
+    const urgencyNote = isToday
+      ? `<p style="color: red; font-weight: bold;">These sessions are for <u>today only</u>. Please book your slot as soon as possible to avoid missing out.</p>`
+      : '';
 
     for (const student of students) {
       try {
         const html = `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-              <h1 style="margin: 0; font-size: 28px;">Session Invitation</h1>
-              <p style="margin: 10px 0 0 0; opacity: 0.9;">Book your next learning session!</p>
-            </div>
-            <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-              <h2 style="color: #333; margin-bottom: 20px;">Hello ${student.name},</h2>
-              <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
-                We are excited to let you know that new session slots are available for booking!<br/>
-                Please log in to your Score-Smart-LMS account and book a session that fits your schedule.
-              </p>
-              <h3 style="color: #333; margin-top: 0;">Available Slots:</h3>
-              ${slotList}
-              <p style="color: #666; font-size: 14px; margin-top: 30px;">
-                If you have any questions or need help booking, please contact our support team.
-              </p>
-            </div>
-            <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-              <p>© 2024 Score-Smart-LMS. All rights reserved.</p>
-            </div>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0; font-size: 28px;">Session Invitation</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">Book your next learning session!</p>
           </div>
-        `;
+          <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <h2 style="color: #333; margin-bottom: 20px;">Hello ${student.name},</h2>
+            <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+              We are excited to let you know that new session slots are available for booking!<br/>
+              Please log in to your Score-Smart-LMS account and book a session that fits your schedule.
+            </p>
+            ${urgencyNote}
+            <h3 style="color: #333; margin-top: 0;">Available Slots:</h3>
+            ${slotList}
+            <p style="color: #666; font-size: 14px; margin-top: 30px;">
+              If you have any questions or need help booking, please contact our support team.
+            </p>
+          </div>
+          <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
+            <p>© 2024 Score-Smart-LMS. All rights reserved.</p>
+          </div>
+        </div>
+      `;
+
         await this.sendEmail({
           to: student.email,
-          subject: 'Book Your Next Session - New Slots Available!',
+          subject,
           html,
         });
+
         sent++;
       } catch (err) {
         failed++;
         errors.push({ email: student.email, error: err });
       }
     }
+
     return { sent, failed, errors };
   }
+
 }
 
 export default new EmailService(); 

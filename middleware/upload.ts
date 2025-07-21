@@ -14,15 +14,15 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary,
   params: async (req: any, file: Express.Multer.File) => {
-    const folder = req.baseUrl?.includes('study-material')
-      ? 'study-materials'
-      : 'general-uploads';
+    const collection = req.body.collectionName?.trim() || 'uncategorized';
 
     return {
-      folder,
-      resource_type: 'auto',
-      public_id: `${file.fieldname}-${Date.now()}`,
-      type: 'authenticated', 
+      folder: `study-materials/${collection}`, // ✅ dynamic folder
+      resource_type: 'raw',
+      use_filename: true,
+      unique_filename: false,
+      type: 'authenticated',
+      access_mode: 'authenticated',
     };
   },
 });
@@ -43,7 +43,7 @@ const allowedTypes = [
   'video/webm',
 ];
 
-// ✅ File filter (same signature, no change needed elsewhere)
+// ✅ File filter
 const fileFilter = (
   req: any,
   file: Express.Multer.File,
@@ -60,7 +60,7 @@ const fileFilter = (
   }
 };
 
-// ✅ Final Multer config (same export)
+// ✅ Final Multer config
 export const upload = multer({
   storage,
   fileFilter,
@@ -70,7 +70,7 @@ export const upload = multer({
   },
 });
 
-// ✅ Error handler (identical API, no changes needed)
+// ✅ Error handler
 export const handleUploadError = (
   error: any,
   req: any,
@@ -101,3 +101,6 @@ export const handleUploadError = (
 
   next(error);
 };
+
+// ✅ Export cloudinary for use in controllers
+export { cloudinary };

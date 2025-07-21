@@ -212,6 +212,7 @@ export const createSession = async (
       students = [],
     } = req.body;
 
+    console.log('Creating session with data:')
     const user = await User.findById(req.user?._id);
     if (!user || (user.role !== 'tutor' && user.role !== 'admin')) {
       res.status(403).json({
@@ -305,11 +306,12 @@ export const createSession = async (
     }
 
     // ✅ Generate Google Meet link
-    const { meetLink } = await generateGoogleMeetLink(
-      subject,
-      startDateTime.toISOString(),
-      endDateTime.toISOString()
-    );
+    // const { meetLink } = await generateGoogleMeetLink(
+    //   subject,
+    //   startDateTime.toISOString(),
+    //   endDateTime.toISOString()
+    // );
+    console.log('isTodayInviteTriggered before save:', false);
 
     // ✅ Create session
     const session = new ClassSession({
@@ -322,14 +324,16 @@ export const createSession = async (
       duration,
       status,
       description,
-      meetingLink: meetLink,
+      isTodayInviteTriggered: false,
+      isCancelledByStudent: false,
+      meetingLink: "",
       price,
       type: user.role === 'admin' ? 'admin_created' : 'tutor_created',
-      createdBy: req.user!._id,
+      createdBy: req.user!._id
     });
-
+    console.log('Session object before save:', session);
     await session.save();
-
+    console.log('Saved session:', session);
     res.status(201).json({
       success: true,
       data: session,
@@ -392,9 +396,11 @@ export const createSlotRequest = async (
       time,
       duration,
       description,
+      isTodayInviteTriggered: false,
       status: 'pending',
       type: 'slot_request',
       createdBy: req.user?._id as mongoose.Types.ObjectId,
+
     });
 
     await session.save();
@@ -441,7 +447,6 @@ export const createSlotRequest = async (
 
   }
 };
-
 // @desc    Book a session (Students only)
 // @route   PUT /api/sessions/:id/book
 // @access  Private (Student)
@@ -471,8 +476,8 @@ export const bookSession = async (
     const studentId = req.user?._id as mongoose.Types.ObjectId;
 
     // Check if student already booked
-    const alreadyBooked = session.students?.some((s) =>
-      s.studentId.toString() === studentId.toString()
+    const alreadyBooked = session.students?.some((s: { studentId: mongoose.Types.ObjectId; studentName?: string }) =>
+      s.studentId.equals(studentId)
     );
 
     if (alreadyBooked) {
@@ -493,6 +498,44 @@ export const bookSession = async (
     // Update session status
     session.status = 'booked';
 
+    // Generate Google Meet link
+    try {
+      // Create session date and time
+      const sessionDate = new Date(session.date);
+      const [hours, minutes] = session.time.split(':').map(Number);
+
+      // Set start time
+      const startTime = new Date(sessionDate);
+      startTime.setHours(hours, minutes, 0, 0);
+
+      // Calculate end time based on duration (assuming duration is like "60 minutes")
+      const durationMatch = session.duration.match(/(\d+)/);
+      const durationMinutes = durationMatch ? parseInt(durationMatch[1]) : 60;
+      const endTime = new Date(startTime);
+      endTime.setMinutes(startTime.getMinutes() + durationMinutes);
+
+      // Create meeting summary with subject, tutor, and student names
+      const meetingSummary = `${session.subject} - ${session.tutorName} & ${req.user?.name}`;
+
+      // Generate Google Meet link
+      const meetingData = await generateGoogleMeetLink(
+        meetingSummary,
+        startTime.toISOString(),
+        endTime.toISOString(),
+        'Asia/Karachi' // You can make this dynamic based on user timezone
+      );
+
+      // Update session with meeting link
+      session.meetingLink = meetingData.meetLink || '';
+
+      console.log('Generated meeting link:', meetingData.meetLink);
+
+    } catch (meetError) {
+      console.error('Failed to generate meeting link:', meetError);
+      // Continue with booking even if meet link generation fails
+      // You might want to handle this differently based on your requirements
+    }
+
     await session.save();
 
     // Update user stats
@@ -506,6 +549,7 @@ export const bookSession = async (
       success: true,
       data: session,
       message: 'Session booked successfully',
+      meetingLink: session.meetingLink, // Include meeting link in response
     });
   } catch (error) {
     console.error('Book session error:', error);
@@ -868,5 +912,49 @@ export const getAvailableTutors = async (
       success: false,
       message: 'Server error while fetching tutors',
     });
+  }
+};
+
+
+
+
+export const cancelSessionByStudent = async (req: AuthRequest, res: Response) => {
+  try {
+    const sessionId = req.params.id;
+    const studentId = req.user?._id as string | mongoose.Types.ObjectId; // assuming student ID comes from auth middleware
+
+    if (!mongoose.Types.ObjectId.isValid(sessionId)) {
+      return res.status(400).json({ message: "Invalid session ID" });
+    }
+
+    const session = await ClassSession.findById(sessionId);
+
+    if (!session) {
+      return res.status(404).json({ message: "Session not found" });
+    }
+
+    // Check if the session is booked by this student
+    const studentIndex = session.students?.findIndex(
+      (s: { studentId: mongoose.Types.ObjectId | string; studentName?: string }) => s.studentId.toString() === (studentId as string | mongoose.Types.ObjectId).toString()
+    );
+
+    if (studentIndex === -1 || !session.students || session.students.length === 0) {
+      return res.status(403).json({ message: "You are not booked for this session" });
+    }
+
+    // Remove the student
+    session.students.splice(studentIndex, 1);
+    session.status = "available";
+    session.isCancelledByStudent = true;
+
+    await session.save();
+
+    return res.status(200).json({
+      message: "Session cancelled successfully",
+      session,
+    });
+  } catch (error) {
+    console.error("Cancel session error:", error);
+    return res.status(500).json({ message: "Server error cancelling session" });
   }
 };

@@ -16,7 +16,6 @@ function isValidWeekday(day: string): day is Weekday {
   return weekdays.includes(day as Weekday);
 }
 
-
 export const getWeeklyAvailability = async (req: Request, res: Response) => {
   const { userId } = req.params;
 
@@ -31,19 +30,25 @@ export const getWeeklyAvailability = async (req: Request, res: Response) => {
 
     // 2. Fetch sessions for this tutor
     const existingSessions = await ClassSession.find({
-      tutor: tutor._id, // ✅ Use actual tutor ObjectId
+      tutor: tutor._id,
       status: { $in: ['available', 'booked', 'completed', 'pending', 'approved'] },
-      meetingLink: { $exists: true, $ne: '' }
-    }).select('date time meetingLink status');
+
+    }).select('date time meetingLink status isTodayInviteTriggered');
+
+
 
     // 3. Normalize format for frontend
     const sessions = existingSessions.map((session) => ({
+      _id: session._id.toString(),
       date: session.date.toISOString().split('T')[0],
       time: session.time,
       meetingLink: session.meetingLink,
       status: session.status,
+      isTodayInviteTriggered: session.isTodayInviteTriggered === true,
+      // Ensure this field exists
     }));
 
+    console.log(sessions);
     return res.json({
       availability: weeklyAvailability,
       existingSessions: sessions,

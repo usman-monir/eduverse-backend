@@ -19,12 +19,15 @@ export const authenticate = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    let token = req.header('Authorization')?.replace('Bearer ', '');
+
+    // 👇 Fallback to query param
+    if (!token && req.query.token) {
+      token = req.query.token as string;
+    }
 
     if (!token) {
-      res
-        .status(401)
-        .json({ success: false, message: 'Access denied. No token provided.' });
+      res.status(401).json({ success: false, message: 'Access denied. No token provided.' });
       return;
     }
 
@@ -32,6 +35,7 @@ export const authenticate = async (
       token,
       process.env.JWT_SECRET || 'fallback-secret'
     ) as JwtPayload;
+
     const user = await User.findById(decoded.id).select('-password');
 
     if (!user) {

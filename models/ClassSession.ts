@@ -16,10 +16,13 @@ export interface IClassSession extends Document {
     studentId: mongoose.Types.ObjectId;
     studentName?: string;
   }[];
+  isTodayInviteTriggered: boolean; 
+  isCancelledByStudent?: boolean; // Optional field to track if the session was cancelled by the student
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
+
 
 const classSessionSchema = new Schema<IClassSession>(
   {
@@ -76,6 +79,15 @@ const classSessionSchema = new Schema<IClassSession>(
       required: [true, 'Type is required'],
       default: 'admin_created',
     },
+    isTodayInviteTriggered: {
+      type: Boolean,
+      default: false,
+    },
+    isCancelledByStudent: {
+      type: Boolean,
+      default: false,
+    },
+    // Assuming createdBy is the user who created the class session
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
@@ -100,7 +112,7 @@ const classSessionSchema = new Schema<IClassSession>(
     timestamps: true,
   }
 );
-
+ 
 // Index for efficient queries
 classSessionSchema.index({ tutor: 1, date: 1, status: 1 });
 classSessionSchema.index({ 'students.studentId': 1, status: 1 }); // ✅ correct path
@@ -109,7 +121,8 @@ classSessionSchema.index({ type: 1, status: 1 });
 classSessionSchema.index({ createdBy: 1, status: 1 });
 classSessionSchema.index({ type: 1, createdBy: 1 });
 
-export const ClassSession = mongoose.model<IClassSession>(
+export const ClassSession = mongoose.models.ClassSession || mongoose.model<IClassSession>(
   'ClassSession',
   classSessionSchema
 );
+
