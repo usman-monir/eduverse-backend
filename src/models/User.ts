@@ -38,6 +38,15 @@ export interface IUser extends Document {
   subjects?: string[];
   experience?: string;
   weeklyAvailability?: IWeeklyAvailability;
+  
+  // Student-specific fields
+  preferredLanguage?: 'English' | 'Hindi' | 'Punjabi' | 'Nepali';
+  desiredScore?: number;
+  examDeadline?: Date;
+  courseType?: 'one-on-one' | 'smart-quad';
+  courseDuration?: number; // in weeks
+  totalSessions?: number;
+  courseExpiryDate?: Date;
 
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -133,6 +142,34 @@ const userSchema = new Schema<IUser>(
     weeklyAvailability: {
       type: weeklyAvailabilitySchema,
       default: {},
+    },
+    // Student-specific fields
+    preferredLanguage: {
+      type: String,
+      enum: ['English', 'Hindi', 'Punjabi', 'Nepali'],
+    },
+    desiredScore: {
+      type: Number,
+      min: 0,
+      max: 90,
+    },
+    examDeadline: {
+      type: Date,
+    },
+    courseType: {
+      type: String,
+      enum: ['one-on-one', 'smart-quad'],
+    },
+    courseDuration: {
+      type: Number,
+      min: 1,
+    },
+    totalSessions: {
+      type: Number,
+      min: 1,
+    },
+    courseExpiryDate: {
+      type: Date,
     },
   },
   {

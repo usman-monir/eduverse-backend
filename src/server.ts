@@ -14,6 +14,8 @@ import whatsappRoutes from './routes/whatsapp';
 import emailRoutes from './routes/email';
 import subjectRoutes from './routes/subjects';
 import availabeSlotsRoutes from './routes/slots';
+import smartQuadRoutes from './routes/smartQuad';
+import notificationRoutes from './routes/notifications';
 // Load environment variables
 dotenv.config();
 
@@ -59,6 +61,8 @@ app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/tutors', availabeSlotsRoutes);
+app.use('/api/smart-quad', smartQuadRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Google Calendar API setup
 const oauth2Client: Auth.OAuth2Client = new google.auth.OAuth2(

@@ -74,6 +74,36 @@ interface InvitationEmailData {
   loginUrl: string;
 }
 
+interface SmartQuadAssignmentData {
+  studentEmail: string;
+  studentName: string;
+  batchName: string;
+  tutorName: string;
+  courseType: string;
+  preferredLanguage: string;
+  examDeadline: Date;
+  courseExpiryDate: Date;
+}
+
+interface SmartQuadRemovalData {
+  studentEmail: string;
+  studentName: string;
+  batchName: string;
+}
+
+interface SmartQuadCancellationData {
+  studentEmail: string;
+  studentName: string;
+  batchName: string;
+}
+
+interface CourseExpiryNotificationData {
+  studentEmail: string;
+  studentName: string;
+  courseExpiryDate: Date;
+  daysRemaining: number;
+}
+
 class EmailService {
   private transporter: nodemailer.Transporter;
 
@@ -621,6 +651,187 @@ class EmailService {
       }
     }
     return { sent, failed, errors };
+  }
+
+  // Send Smart Quad assignment notification
+  async sendSmartQuadAssignment(data: SmartQuadAssignmentData): Promise<boolean> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="margin: 0; font-size: 28px;">Smart Quad Assignment</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">You've been assigned to a group class!</p>
+        </div>
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <h2 style="color: #333; margin-bottom: 20px;">Hello ${data.studentName},</h2>
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            Congratulations! You have been successfully assigned to a Smart Quad batch. This group learning experience will help you achieve your goals faster.
+          </p>
+          
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #4f46e5;">
+            <h3 style="color: #333; margin-top: 0; margin-bottom: 15px;">Batch Details</h3>
+            <div style="color: #666; line-height: 1.8;">
+              <p><strong>Batch Name:</strong> ${data.batchName}</p>
+              <p><strong>Tutor:</strong> ${data.tutorName}</p>
+              <p><strong>Course Type:</strong> ${data.courseType}</p>
+              <p><strong>Preferred Language:</strong> ${data.preferredLanguage}</p>
+              <p><strong>Exam Deadline:</strong> ${data.examDeadline.toLocaleDateString()}</p>
+              <p><strong>Course Expiry:</strong> ${data.courseExpiryDate.toLocaleDateString()}</p>
+            </div>
+          </div>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <h3 style="color: #333; margin-bottom: 15px;">What's Next?</h3>
+            <ul style="color: #666; line-height: 1.8; padding-left: 20px;">
+              <li>Log in to your account to view batch details</li>
+              <li>Check your weekly schedule</li>
+              <li>Connect with your group members</li>
+              <li>Prepare for your first group session</li>
+            </ul>
+          </div>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p style="color: #888; font-size: 14px; margin: 0;">
+              If you have any questions about your Smart Quad assignment, please contact our support team.
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to: data.studentEmail,
+      subject: 'Smart Quad Assignment - Welcome to Your Group Class!',
+      html,
+    });
+  }
+
+  // Send Smart Quad removal notification
+  async sendSmartQuadRemoval(data: SmartQuadRemovalData): Promise<boolean> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="margin: 0; font-size: 28px;">Smart Quad Update</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Batch assignment change</p>
+        </div>
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <h2 style="color: #333; margin-bottom: 20px;">Hello ${data.studentName},</h2>
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            We regret to inform you that you have been removed from the Smart Quad batch: <strong>${data.batchName}</strong>.
+          </p>
+          
+          <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
+            <h3 style="color: #856404; margin-top: 0; margin-bottom: 15px;">What This Means</h3>
+            <div style="color: #856404; line-height: 1.8;">
+              <p>• You will no longer be part of this group class</p>
+              <p>• Your individual sessions will continue as scheduled</p>
+              <p>• You may be reassigned to another batch if available</p>
+            </div>
+          </div>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p style="color: #888; font-size: 14px; margin: 0;">
+              If you have any questions about this change, please contact our support team immediately.
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to: data.studentEmail,
+      subject: 'Smart Quad Batch Update - Important Notice',
+      html,
+    });
+  }
+
+  // Send Smart Quad cancellation notification
+  async sendSmartQuadCancellation(data: SmartQuadCancellationData): Promise<boolean> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="margin: 0; font-size: 28px;">Smart Quad Cancellation</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Batch has been cancelled</p>
+        </div>
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <h2 style="color: #333; margin-bottom: 20px;">Hello ${data.studentName},</h2>
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            We regret to inform you that the Smart Quad batch <strong>${data.batchName}</strong> has been cancelled.
+          </p>
+          
+          <div style="background: #f8d7da; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc3545;">
+            <h3 style="color: #721c24; margin-top: 0; margin-bottom: 15px;">Important Information</h3>
+            <div style="color: #721c24; line-height: 1.8;">
+              <p>• All group sessions for this batch are cancelled</p>
+              <p>• You will be contacted about alternative arrangements</p>
+              <p>• Your individual learning plan will be reviewed</p>
+            </div>
+          </div>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p style="color: #888; font-size: 14px; margin: 0;">
+              We apologize for any inconvenience. Please contact our support team for assistance with your learning plan.
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to: data.studentEmail,
+      subject: 'Smart Quad Batch Cancelled - Important Notice',
+      html,
+    });
+  }
+
+  // Send course expiry notification
+  async sendCourseExpiryNotification(data: CourseExpiryNotificationData): Promise<boolean> {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="margin: 0; font-size: 28px;">Course Expiry Alert</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Action required - ${data.daysRemaining} days remaining</p>
+        </div>
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <h2 style="color: #333; margin-bottom: 20px;">Hello ${data.studentName},</h2>
+          <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+            This is a friendly reminder that your course access will expire on <strong>${data.courseExpiryDate.toLocaleDateString()}</strong>.
+          </p>
+          
+          <div style="background: #fff3cd; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
+            <h3 style="color: #856404; margin-top: 0; margin-bottom: 15px;">Important Notice</h3>
+            <div style="color: #856404; line-height: 1.8;">
+              <p><strong>Days Remaining:</strong> ${data.daysRemaining} days</p>
+              <p><strong>Expiry Date:</strong> ${data.courseExpiryDate.toLocaleDateString()}</p>
+              <p>• After expiry, you won't be able to book new sessions</p>
+              <p>• Complete your remaining sessions before expiry</p>
+              <p>• Contact us to extend your course if needed</p>
+            </div>
+          </div>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <h3 style="color: #333; margin-bottom: 15px;">Recommended Actions</h3>
+            <ul style="color: #666; line-height: 1.8; padding-left: 20px;">
+              <li>Review your remaining sessions</li>
+              <li>Book any pending sessions</li>
+              <li>Contact support for course extension</li>
+              <li>Complete your learning objectives</li>
+            </ul>
+          </div>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p style="color: #888; font-size: 14px; margin: 0;">
+              Don't let your progress expire! Contact our support team to discuss your options.
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to: data.studentEmail,
+      subject: `Course Expiry Alert - ${data.daysRemaining} Days Remaining`,
+      html,
+    });
   }
 }
 

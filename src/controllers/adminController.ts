@@ -3,6 +3,7 @@ import { User, IUser } from '../models/User';
 import { Types } from 'mongoose';
 import { ClassSession, IClassSession } from '../models/ClassSession';
 import { StudyMaterial, IStudyMaterial } from '../models/StudyMaterial';
+import { SmartQuad } from '../models/SmartQuad';
 
 import EmailService from  '../services/emailService';
 
@@ -26,6 +27,8 @@ export const getSystemStats = async (
       totalMaterials,
       pendingSlotRequests,
       completedSessions,
+      totalSmartQuads,
+      activeSmartQuads,
     ] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ role: 'student' }),
@@ -34,6 +37,8 @@ export const getSystemStats = async (
       StudyMaterial.countDocuments(),
       ClassSession.countDocuments({ type: 'slot_request', status: 'pending' }),
       ClassSession.countDocuments({ status: 'completed' }),
+      SmartQuad.countDocuments(),
+      SmartQuad.countDocuments({ status: { $in: ['forming', 'active'] } }),
     ]);
 
     // Get recent activity
@@ -66,6 +71,10 @@ export const getSystemStats = async (
         },
         slotRequests: {
           pending: pendingSlotRequests,
+        },
+        smartQuads: {
+          total: totalSmartQuads,
+          active: activeSmartQuads,
         },
         recentActivity: {
           sessions: recentSessions,
@@ -170,7 +179,20 @@ export const updateUser = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { role, isActive, subjects, experience } = req.body;
+    const { 
+      role, 
+      isActive, 
+      subjects, 
+      experience,
+      preferredLanguage,
+      desiredScore,
+      examDeadline,
+      courseType,
+      courseDuration,
+      totalSessions,
+      courseExpiryDate,
+      accessTill
+    } = req.body;
 
     const user = await User.findById(req.params.id);
 
@@ -199,6 +221,16 @@ export const updateUser = async (
       user.status = isActive ? 'active' : 'inactive';
     if (subjects) user.subjects = subjects;
     if (experience) user.experience = experience;
+    
+    // Student-specific fields
+    if (preferredLanguage) user.preferredLanguage = preferredLanguage;
+    if (desiredScore) user.desiredScore = desiredScore;
+    if (examDeadline) user.examDeadline = new Date(examDeadline);
+    if (courseType) user.courseType = courseType;
+    if (courseDuration) user.courseDuration = courseDuration;
+    if (totalSessions) user.totalSessions = totalSessions;
+    if (courseExpiryDate) user.courseExpiryDate = new Date(courseExpiryDate);
+    if (accessTill) user.accessTill = new Date(accessTill);
 
     await user.save();
 
@@ -527,7 +559,7 @@ export const getAllTutorsWithSubjects = async (
   res: Response
 ): Promise<void> => {
   try {
-    const tutors = await User.find({ role: 'tutor' }, 'name email subjects');
+    const tutors = await User.find({ role: 'tutor' }, '_id name email subjects');
     res.json({
       success: true,
       data: tutors,
