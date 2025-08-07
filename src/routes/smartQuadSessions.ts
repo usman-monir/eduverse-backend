@@ -17,7 +17,7 @@ router.use(authenticate);
 router.post('/:smartQuadId/sessions',  authorize('admin', 'tutor'), createSmartQuadSessions);
 
 // Get all sessions for a Smart Quad (Admin, Tutor, Student)
-router.get('/:smartQuadId/sessions', authorize('admin', 'tutor', 'student'), getSmartQuadSessions);
+router.get('/:smartQuadId/my-sessions', authorize('admin', 'tutor', 'student'), getSmartQuadSessions);
 
 // Update a Smart Quad session (Admin, Tutor)
 router.put('/:smartQuadId/sessions/:sessionId', authorize('admin', 'tutor'), updateSmartQuadSession);

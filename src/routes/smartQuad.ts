@@ -15,7 +15,7 @@ import { authenticate, authorize } from '../middleware/auth';
 
 const router = express.Router();
 
-// Smart Quad routes
+// Smart Quad routes (Admin only)
 router.route('/')
   .post(authenticate, authorize('admin'), createSmartQuad)
   .get(authenticate, authorize('admin'), getSmartQuads);
@@ -39,6 +39,7 @@ router.route('/:id/remove-student/:studentId')
   .delete(authenticate, authorize('admin'), removeStudentFromSmartQuad);
 
 router.route('/:id/sessions')
-  .get(authenticate, authorize('admin'), getSmartQuadSessions);
+  .get(authenticate, authorize('admin', 'tutor', 'student'), getSmartQuadSessions);
+
 
 export default router; 
