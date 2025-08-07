@@ -1,5 +1,5 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
-import cors from 'cors';
+import cors from 'cors'; 
 import dotenv from 'dotenv';
 import path from 'path';
 import { connectDB } from './config/database';
