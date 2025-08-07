@@ -15,7 +15,7 @@ import emailRoutes from './routes/email';
 import subjectRoutes from './routes/subjects';
 import availabeSlotsRoutes from './routes/slots';
 // Load environment variables
-dotenv.config();
+dotenv.config();    
 
 const app: Express = express();
 const PORT: number = parseInt(process.env.PORT || '5050', 10);
