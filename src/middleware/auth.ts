@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { User, IUser } from '../models/User';
 import bcrypt from 'bcryptjs'; // Import bcrypt for password hashing
 
-interface AuthRequest extends Request {
+export interface AuthRequest extends Request {
   user?: IUser;
 }
 

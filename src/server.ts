@@ -15,6 +15,7 @@ import emailRoutes from './routes/email';
 import subjectRoutes from './routes/subjects';
 import availabeSlotsRoutes from './routes/slots';
 import smartQuadRoutes from './routes/smartQuad';
+import smartQuadSessionRoutes from './routes/smartQuadSessions';
 import notificationRoutes from './routes/notifications';
 // Load environment variables
 dotenv.config();
@@ -62,6 +63,7 @@ app.use('/api/email', emailRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/tutors', availabeSlotsRoutes);
 app.use('/api/smart-quad', smartQuadRoutes);
+app.use('/api/smart-quad', smartQuadSessionRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // Google Calendar API setup

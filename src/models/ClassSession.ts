@@ -11,11 +11,13 @@ export interface IClassSession extends Document {
   meetingLink?: string;
   description?: string;
   price?: number;
-  type: 'admin_created' | 'tutor_created' | 'slot_request';
+  type: 'admin_created' | 'tutor_created' | 'slot_request' | 'smart_quad';
   students?: {
     studentId: mongoose.Types.ObjectId;
     studentName?: string;
   }[];
+  smartQuadId?: mongoose.Types.ObjectId; // Reference to Smart Quad for group sessions
+  sessionNumber?: number; // Session number within the Smart Quad (1, 2, 3, etc.)
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -72,9 +74,17 @@ const classSessionSchema = new Schema<IClassSession>(
     },
     type: {
       type: String,
-      enum: ['admin_created', 'tutor_created', 'slot_request'],
+      enum: ['admin_created', 'tutor_created', 'slot_request', 'smart_quad'],
       required: [true, 'Type is required'],
       default: 'admin_created',
+    },
+    smartQuadId: {
+      type: Schema.Types.ObjectId,
+      ref: 'SmartQuad',
+    },
+    sessionNumber: {
+      type: Number,
+      min: [1, 'Session number must be at least 1'],
     },
     createdBy: {
       type: Schema.Types.ObjectId,
@@ -108,6 +118,8 @@ classSessionSchema.index({ date: 1, status: 1 });
 classSessionSchema.index({ type: 1, status: 1 });
 classSessionSchema.index({ createdBy: 1, status: 1 });
 classSessionSchema.index({ type: 1, createdBy: 1 });
+classSessionSchema.index({ smartQuadId: 1, status: 1 }); // For Smart Quad sessions
+classSessionSchema.index({ smartQuadId: 1, sessionNumber: 1 }); // For session ordering
 
 export const ClassSession = mongoose.model<IClassSession>(
   'ClassSession',
